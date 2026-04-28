@@ -8,7 +8,7 @@
         :root { --primary: #6366f1; }
         [data-theme="dark"] { --primary: #818cf8; }
         body { display: flex; justify-content: center; font-family: 'Inter', sans-serif;}
-        .container { max-width: 860px; width: 100%; padding: 40px;}
+        .container { max-width: 860px; width: 100%; padding: 40px; box-sizing: border-box;}
         .data-box { background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;}
         textarea { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box;}
         button { padding: 10px 20px; border: none; cursor: pointer; border-radius: 4px;}
@@ -71,7 +71,6 @@ async function load() {
         const res = await fetch(`/proposals/${id}`);
         const p = await res.json();
 
-        // NEW: Added the deadline to the HTML injection below
         document.getElementById("data-container").innerHTML = `
             <p><b>Title:</b> ${p.title}</p>
             <p><b>Domain:</b> ${p.domain}</p>

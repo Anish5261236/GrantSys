@@ -8,7 +8,7 @@
         :root { --primary: #6366f1; }
         [data-theme="dark"] { --primary: #818cf8; }
         body { display: flex; justify-content: center; }
-        .form-box { max-width: 600px; padding: 40px; }
+        .form-box { max-width: 600px; width: 100%; padding: 40px; box-sizing: border-box; }
         input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; }
         .btn-submit { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; cursor: pointer;}
         .form-label { font-size: 14px; color: #555; display: block; margin-bottom: 5px; }
@@ -62,7 +62,7 @@ async function submitProposal() {
     const description = document.getElementById("description").value;
     const domain = document.getElementById("domain").value;
     const budget = document.getElementById("budget").value;
-    const deadline = document.getElementById("deadline").value; // <-- NEW: Grab deadline
+    const deadline = document.getElementById("deadline").value;
 
     const btn = document.getElementById("submitBtn");
 
@@ -78,7 +78,7 @@ async function submitProposal() {
     formData.append("description", description);
     formData.append("domain", domain);
     formData.append("budget", budget);
-    formData.append("deadline", deadline); // <-- NEW: Append to form data
+    formData.append("deadline", deadline);
     formData.append("submittedBy", localStorage.getItem("email"));
 
     if (fileInput.files[0]) {

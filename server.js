@@ -41,7 +41,7 @@ const proposalSchema = new mongoose.Schema({
     description: String,
     domain: String,
     budget: Number,
-    deadline: String, // <-- NEW: Deadline added to schema
+    deadline: String,
     submittedBy: String,
     status: { type: String, default: "Pending" },
     comment: { type: String, default: "" },

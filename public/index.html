@@ -1,172 +1,83 @@
-<!-- Basic HTML setup -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <!-- Page title -->
     <title>Login | GrantSys</title>
-
-    <!-- Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter..." rel="stylesheet">
-
     <style>
-        /* Light theme variables */
-        :root {
-            --primary: #6366f1;
-        }
-
-        /* Dark mode variables */
-        [data-theme="dark"] {
-            --primary: #818cf8;
-        }
-
-        /* Reset default styling */
-        * {
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Center the login box */
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        /* Login container */
-        .login-box {
-            width: 400px;
-            padding: 40px;
-        }
-
-        /* Input fields */
-        input {
-            width: 100%;
-            padding: 10px;
-        }
-
-        /* Button styling */
-        button {
-            width: 100%;
-            padding: 10px;
-            background: var(--primary);
-            color: white;
-        }
+        :root { --primary: #6366f1; }
+        [data-theme="dark"] { --primary: #818cf8; }
+        * { margin: 0; padding: 0; font-family: 'Inter', sans-serif;}
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; box-sizing: border-box;}
+        .login-box { width: 100%; max-width: 400px; padding: 40px; box-sizing: border-box; text-align: center;}
+        input { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box;}
+        button { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; cursor: pointer; border-radius: 4px;}
+        h2 { margin-bottom: 20px; }
     </style>
-
     <script>
-        // Load saved theme (dark/light)
         if(localStorage.getItem("theme") === "dark") {
             document.documentElement.setAttribute("data-theme", "dark");
         }
     </script>
 </head>
-
 <body>
 
-<!-- Notification container -->
 <div id="notification-container"></div>
 
-<!-- Login UI -->
 <div class="login-box">
-
-    <!-- App title -->
     <h2>GrantSys.edu</h2>
-
-    <!-- Email input -->
     <input type="email" id="email" placeholder="Enter email">
-
-    <!-- Password input -->
     <input type="password" id="password" placeholder="Enter password">
-
-    <!-- Login button -->
     <button id="loginBtn" onclick="login()">Login</button>
-
 </div>
 
-
 <script>
-
-
-// ---------------- CLEAR OLD SESSION ----------------
-
-// Remove previous login data
 localStorage.clear();
 
-
-// ---------------- SHOW NOTIFICATION ----------------
 function showNotification(msg, type = "info") {
-
     const container = document.getElementById("notification-container");
-
     const div = document.createElement("div");
     div.innerText = msg;
-
     container.appendChild(div);
-
-    // Remove after 3 seconds
     setTimeout(() => div.remove(), 3000);
 }
 
-
-// ---------------- LOGIN FUNCTION ----------------
 async function login() {
-
-    // Get input values
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-
     const btn = document.getElementById("loginBtn");
 
-    // Validation
     if (!email || !password) {
         return showNotification("Fill all fields");
     }
 
-    // Show loading state
     btn.innerText = "Loading...";
 
     try {
-        // Send request to backend
         const res = await fetch("/login", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
         });
 
-        // Convert response
         const data = await res.json();
 
         if (data.success) {
-
-            // Save session data
             localStorage.setItem("role", data.role);
             localStorage.setItem("email", email);
-
             showNotification("Login successful");
-
-            // Redirect to dashboard
             setTimeout(() => {
                 window.location.href = "/dashboard.html";
             }, 1000);
-
         } else {
             showNotification("Invalid credentials");
             btn.innerText = "Login";
         }
-
     } catch (err) {
         showNotification("Server error");
         btn.innerText = "Login";
     }
 }
-
 </script>
-
 </body>
 </html>
