@@ -1,199 +1,179 @@
-<!-- Basic HTML structure -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <!-- Page title -->
     <title>Submit Proposal | GrantSys</title>
-
-    <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter..." rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Light theme variables */
         :root {
-            --primary: #6366f1;
+            --primary: #6366f1; --primary-hover: #4f46e5; --primary-glow: rgba(99, 102, 241, 0.4);
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --glass-bg: rgba(255, 255, 255, 0.6); --glass-border: rgba(255, 255, 255, 0.8);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+            --text-main: #0f172a; --text-muted: #64748b;
+            --card-bg: #ffffff; --input-bg: rgba(255,255,255,0.9);
         }
-
-        /* Dark mode */
         [data-theme="dark"] {
-            --primary: #818cf8;
+            --primary: #818cf8; --primary-hover: #6366f1; --primary-glow: rgba(129, 140, 248, 0.3);
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --glass-bg: rgba(30, 41, 59, 0.65); --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+            --card-bg: #1e293b; --input-bg: rgba(15, 23, 42, 0.8);
         }
 
-        /* Page layout */
-        body {
-            display: flex;
-            justify-content: center;
-        }
+        body { margin: 0; background: var(--bg-gradient); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Inter', sans-serif; padding: 24px; transition: 0.4s; }
+        
+        .form-box { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 48px; border-radius: 24px; width: 100%; max-width: 600px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); animation: fadeInUp 0.5s ease;}
+        .top-nav { display: flex; justify-content: space-between; margin-bottom: 32px; }
+        .nav-link { color: var(--text-muted); text-decoration: none; font-weight: 600; cursor: pointer; font-size: 14px; transition: 0.2s; display: flex; align-items: center; gap: 8px;}
+        .nav-link:hover { color: var(--primary); transform: translateX(-4px);}
+        
+        h2 { margin-bottom: 32px; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;}
+        
+        label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;}
+        input, textarea { width: 100%; padding: 16px; margin-bottom: 24px; border-radius: 12px; border: 1px solid var(--glass-border); color: var(--text-main); outline: none; box-sizing: border-box; font-family: inherit; font-size: 14px; background: var(--input-bg); transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
+        input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); transform: translateY(-2px);}
+        textarea { min-height: 120px; resize: vertical; }
+        
+        /* Drag & Drop UI */
+        .drop-zone { border: 2px dashed var(--glass-border); border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.3s ease; background: var(--input-bg); margin-bottom: 32px; position: relative; overflow: hidden;}
+        .drop-zone:hover, .drop-zone.dragover { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); transform: translateY(-2px);}
+        .drop-zone .icon { font-size: 40px; margin-bottom: 12px; display: block; transition: 0.3s;}
+        .drop-zone:hover .icon { transform: scale(1.1) translateY(-4px); }
+        .drop-zone p { color: var(--text-muted); font-size: 14px; font-weight: 500;}
+        .drop-zone p span { color: var(--primary); font-weight: 700; text-decoration: underline;}
+        .file-info { font-size: 14px; font-weight: 700; color: var(--primary); margin-top: 10px; display: none; background: rgba(99, 102, 241, 0.1); padding: 8px 16px; border-radius: 8px;}
+        
+        .btn-submit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px var(--primary-glow);}
+        .btn-submit:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 8px 24px var(--primary-glow); }
+        .btn-submit:active { transform: scale(0.96); box-shadow: none;}
 
-        /* Form container */
-        .form-box {
-            max-width: 600px;
-            padding: 40px;
-        }
-
-        /* Inputs */
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-        }
-
-        /* Submit button */
-        .btn-submit {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary);
-            color: white;
-        }
+        #notification-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 12px;}
+        .toast { background: var(--card-bg); color: var(--text-main); padding: 16px 24px; border-radius: 16px; box-shadow: var(--glass-shadow); border: 1px solid var(--glass-border); border-left: 6px solid var(--primary); display: flex; align-items: center; gap: 14px; animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; font-weight: 500; font-size: 14px;}
+        .toast-success { border-left-color: #10b981; } .toast-warning { border-left-color: #f59e0b; } .toast-error { border-left-color: #ef4444; }
+        @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
-
     <script>
-        // Load theme
-        if(localStorage.getItem("theme") === "dark") {
-            document.documentElement.setAttribute("data-theme", "dark");
-        }
+        if(localStorage.getItem("theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");
     </script>
 </head>
-
 <body>
+    <div id="notification-container"></div>
+    <div class="form-box">
+        <div class="top-nav">
+            <a class="nav-link" onclick="location.href='/dashboard.html'"><span>←</span> Back to Dashboard</a>
+        </div>
+        <h2>Submit Research Proposal</h2>
+        <label>Project Title</label>
+        <input id="title" placeholder="e.g., Quantum Computing Architecture">
+        
+        <div style="display: flex; gap: 16px;">
+            <div style="flex: 1;"><label>Domain</label><input id="domain" placeholder="e.g., Computer Science"></div>
+            <div style="flex: 1;"><label>Budget ($)</label><input id="budget" type="number" placeholder="e.g., 15000"></div>
+        </div>
 
-<!-- Notification container -->
-<div id="notification-container"></div>
+        <label>Executive Summary</label>
+        <textarea id="description" placeholder="Briefly describe the methodology and impact..."></textarea>
 
-<div class="form-box">
+        <label>Upload Supporting Documents (PDF)</label>
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('attachment').click()">
+            <span class="icon">📄</span>
+            <p id="drop-text">Drag & Drop your file here or <span>browse</span></p>
+            <div class="file-info" id="file-info"></div>
+            <input type="file" id="attachment" accept=".pdf" hidden>
+        </div>
 
-    <!-- Back button -->
-    <a onclick="location.href='/dashboard.html'">← Back</a>
-
-    <!-- Page heading -->
-    <h2>Submit Research Proposal</h2>
-
-    <!-- Title -->
-    <input id="title" placeholder="Project Title">
-
-    <!-- Domain -->
-    <input id="domain" placeholder="Domain">
-
-    <!-- Budget -->
-    <input id="budget" type="number" placeholder="Budget">
-
-    <!-- Description -->
-    <textarea id="description" placeholder="Executive Summary"></textarea>
-
-    <!-- File upload -->
-    <input type="file" id="attachment">
-
-    <!-- Submit button -->
-    <button id="submitBtn" onclick="submitProposal()">Submit</button>
-
-</div>
-
-
-<script>
-
-
-// ---------------- AUTH CHECK ----------------
-
-// If user not logged in → redirect
-if(!localStorage.getItem("role")) {
-    window.location.href = "/";
-}
-
-
-// ---------------- NOTIFICATION ----------------
-function showNotification(msg) {
-    const container = document.getElementById("notification-container");
-
-    const div = document.createElement("div");
-    div.innerText = msg;
-
-    container.appendChild(div);
-
-    setTimeout(() => div.remove(), 3000);
-}
-
-
-// ---------------- FILE UPLOAD HANDLING ----------------
-
-// Get file input
-const fileInput = document.getElementById("attachment");
-
-
-// ---------------- SUBMIT PROPOSAL ----------------
-async function submitProposal() {
-
-    // Get form values
-    const title = document.getElementById("title").value;
-    const description = document.getElementById("description").value;
-    const domain = document.getElementById("domain").value;
-    const budget = document.getElementById("budget").value;
-
-    const btn = document.getElementById("submitBtn");
-
-    // Validation
-    if (!title || !description || !domain || !budget) {
-        return showNotification("Fill all fields");
-    }
-
-    // Disable button during processing
-    btn.innerText = "Submitting...";
-    btn.disabled = true;
-
-    // Create FormData (important for file upload)
-    const formData = new FormData();
-
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("domain", domain);
-    formData.append("budget", budget);
-
-    // Add user email
-    formData.append("submittedBy", localStorage.getItem("email"));
-
-    // Add file if exists
-    if (fileInput.files[0]) {
-        formData.append("attachment", fileInput.files[0]);
-    }
-
-    try {
-        // Send data to backend
-        const res = await fetch("/proposals", {
-            method: "POST",
-            body: formData
-        });
-
-        const result = await res.json();
-
-        if (result.success) {
-
-            showNotification("Proposal submitted successfully");
-
-            // Redirect to dashboard
-            setTimeout(() => {
-                window.location.href = "/dashboard.html";
-            }, 1000);
-
-        } else {
-            showNotification("Error submitting proposal");
-            resetBtn();
+        <button class="btn-submit" id="submitBtn" onclick="submitProposal()">Initialize Secure Submission</button>
+    </div>
+    
+    <script>
+        if(!localStorage.getItem("role")) window.location.href = "/";
+        
+        function showNotification(msg, type = 'info') {
+            const icons = { success: '✅', error: '❌', warning: '⚠️' };
+            const c = document.getElementById('notification-container');
+            const t = document.createElement('div'); t.className = `toast toast-${type}`;
+            t.innerHTML = `<span>${icons[type] || '🔔'}</span> <span>${msg}</span>`; 
+            c.appendChild(t);
+            setTimeout(() => { t.style.transform = 'translateX(120%)'; t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3000);
         }
 
-    } catch (err) {
-        showNotification("Server error");
-        resetBtn();
-    }
-}
+        // Drag & Drop Logic
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('attachment');
+        const fileInfo = document.getElementById('file-info');
+        const dropText = document.getElementById('drop-text');
 
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
 
-// ---------------- RESET BUTTON ----------------
-function resetBtn() {
-    const btn = document.getElementById("submitBtn");
-    btn.innerText = "Submit";
-    btn.disabled = false;
-}
+        ['dragenter', 'dragover'].forEach(eventName => dropZone.classList.add('dragover'));
+        ['dragleave', 'drop'].forEach(eventName => dropZone.classList.remove('dragover'));
 
-</script>
+        dropZone.addEventListener('drop', (e) => {
+            let dt = e.dataTransfer;
+            let files = dt.files;
+            fileInput.files = files;
+            updateFileInfo();
+        });
 
+        fileInput.addEventListener('change', updateFileInfo);
+
+        function updateFileInfo() {
+            if (fileInput.files.length > 0) {
+                dropText.style.display = 'none';
+                fileInfo.style.display = 'inline-block';
+                fileInfo.innerText = `Selected: ${fileInput.files[0].name}`;
+            }
+        }
+
+        async function submitProposal() {
+            const title = document.getElementById("title").value;
+            const description = document.getElementById("description").value;
+            const domain = document.getElementById("domain").value;
+            const budget = document.getElementById("budget").value;
+            const btn = document.getElementById("submitBtn");
+
+            if(!title || !description || !domain || !budget) return showNotification("Please complete all text fields.", "warning");
+            
+            btn.innerText = "Processing...";
+            btn.style.opacity = "0.7";
+            btn.style.pointerEvents = "none";
+
+            const formData = new FormData();
+            formData.append("title", title);
+            formData.append("description", description);
+            formData.append("domain", domain);
+            formData.append("budget", budget);
+            formData.append("submittedBy", localStorage.getItem("email"));
+            if (fileInput.files[0]) formData.append("attachment", fileInput.files[0]);
+            
+            try {
+                const res = await fetch("/proposals", { method: "POST", body: formData });
+                const result = await res.json();
+                if (result.success) { 
+                    showNotification("Proposal committed successfully!", "success"); 
+                    setTimeout(() => window.location.href = "/dashboard.html", 1500);
+                } else { 
+                    showNotification("Data validation error.", "error"); 
+                    resetBtn();
+                }
+            } catch (err) {
+                showNotification("Server error. Connection refused.", "error");
+                resetBtn();
+            }
+        }
+
+        function resetBtn() {
+            const btn = document.getElementById("submitBtn");
+            btn.innerText = "Initialize Secure Submission";
+            btn.style.opacity = "1";
+            btn.style.pointerEvents = "all";
+        }
+    </script>
 </body>
 </html>

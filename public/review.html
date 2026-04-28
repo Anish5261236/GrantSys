@@ -1,226 +1,203 @@
-<!-- Basic HTML setup -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <!-- Page title -->
     <title>Proposal Details | GrantSys</title>
-
-    <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter..." rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* Theme colors (light mode) */
         :root {
-            --primary: #6366f1;
+            --primary: #6366f1; --primary-hover: #4f46e5; --primary-glow: rgba(99, 102, 241, 0.4);
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --glass-bg: rgba(255, 255, 255, 0.6); --glass-border: rgba(255, 255, 255, 0.8);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+            --text-main: #0f172a; --text-muted: #64748b;
+            --card-bg: #ffffff; --input-bg: rgba(255,255,255,0.9);
+            --skeleton-base: #e2e8f0; --skeleton-shine: #f8fafc;
         }
-
-        /* Dark mode styles */
         [data-theme="dark"] {
-            --primary: #818cf8;
+            --primary: #818cf8; --primary-hover: #6366f1; --primary-glow: rgba(129, 140, 248, 0.3);
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --glass-bg: rgba(30, 41, 59, 0.65); --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+            --card-bg: #1e293b; --input-bg: rgba(15, 23, 42, 0.8);
+            --skeleton-base: #1e293b; --skeleton-shine: #334155;
         }
 
-        /* Page layout */
-        body {
-            display: flex;
-            justify-content: center;
-        }
+        body { margin: 0; background: var(--bg-gradient); font-family: 'Inter', sans-serif; display: flex; justify-content: center; padding: 64px 24px; transition: 0.5s ease; color: var(--text-main);}
+        .container { width: 100%; max-width: 860px; background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 48px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); animation: fadeInUp 0.5s ease;}
+        
+        .top-nav { display: flex; justify-content: space-between; margin-bottom: 32px; }
+        .nav-link { color: var(--text-muted); text-decoration: none; font-weight: 600; cursor: pointer; font-size: 14px; transition: 0.2s;}
+        .nav-link:hover { color: var(--primary); transform: translateX(-4px); }
+        
+        h2 { margin-bottom: 32px; font-size: 28px; font-weight: 800; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; letter-spacing: -0.5px;}
+        
+        .grid-info { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px;}
+        .field { background: var(--input-bg); padding: 20px 24px; border-radius: 16px; border: 1px solid var(--glass-border); transition: 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.02);}
+        .field:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 8px 16px var(--primary-glow); }
+        .field.full { grid-column: 1 / -1; }
+        .field label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .field p { font-size: 16px; color: var(--text-main); font-weight: 500; margin: 0; line-height: 1.6;}
+        
+        .btn-download { display: inline-flex; align-items: center; gap: 8px; background: var(--card-bg); color: var(--text-main); padding: 10px 20px; border-radius: 12px; text-decoration: none; font-size: 14px; font-weight: 600; border: 1px solid var(--glass-border); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 6px rgba(0,0,0,0.02);}
+        .btn-download:hover { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 6px 12px var(--primary-glow);}
+        .btn-download:active { transform: scale(0.96); }
 
-        /* Main container */
-        .container {
-            max-width: 860px;
-        }
+        .timeline-box { background: var(--card-bg); padding: 32px; border-radius: 20px; border: 1px solid var(--glass-border); margin-bottom: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);}
+        .timeline-title { font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 24px; border-bottom: 1px solid var(--glass-border); padding-bottom: 12px; letter-spacing: 0.5px;}
+        .history-list { list-style: none; padding: 0; margin: 0; }
+        .history-item { padding: 20px; border-left: 4px solid var(--primary); background: var(--input-bg); margin-bottom: 12px; border-radius: 0 12px 12px 0; transition: 0.3s; }
+        .history-item:hover { transform: translateX(6px); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .h-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; display: flex; align-items: center; gap: 8px;}
+        .h-comment { font-size: 15px; color: var(--text-main); font-weight: 500;}
+        
+        .badge { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;}
+        .badge-Pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-Approved { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-Rejected { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        textarea { width: 100%; box-sizing: border-box; border-radius: 16px; border: 1px solid var(--glass-border); padding: 20px; font-family: inherit; font-size: 14px; margin-bottom: 24px; min-height: 140px; outline: none; transition: 0.3s; background: var(--input-bg); color: var(--text-main); box-shadow: 0 2px 6px rgba(0,0,0,0.02);}
+        textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); transform: translateY(-2px);}
+        
+        .btn-group { display: flex; gap: 16px; }
+        .btn { flex: 1; padding: 16px; border-radius: 14px; border: none; font-weight: 700; font-size: 15px; cursor: pointer; color: white; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
+        .btn-app { background: #10b981; } .btn-app:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3); }
+        .btn-rej { background: #ef4444; } .btn-rej:hover { background: #dc2626; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3); }
+        .btn:active { transform: scale(0.96); box-shadow: none; }
+
+        /* Skeletons */
+        .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; border-radius: 8px; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .sk-title { height: 32px; width: 60%; margin-bottom: 24px;}
+        .sk-box { height: 80px; width: 100%; border-radius: 16px;}
+        .sk-box.large { height: 140px; }
+
+        #notification-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 12px;}
+        .toast { background: var(--card-bg); color: var(--text-main); padding: 16px 24px; border-radius: 16px; box-shadow: var(--glass-shadow); border: 1px solid var(--glass-border); border-left: 6px solid var(--primary); display: flex; align-items: center; gap: 14px; animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; font-weight: 500; font-size: 14px;}
+        .toast-success { border-left-color: #10b981; } .toast-warning { border-left-color: #f59e0b; } .toast-error { border-left-color: #ef4444; }
+        @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
-
     <script>
-        // Load saved theme
-        if(localStorage.getItem("theme") === "dark") {
-            document.documentElement.setAttribute("data-theme", "dark");
-        }
+        if(localStorage.getItem("theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");
     </script>
 </head>
-
 <body>
+    <div id="notification-container"></div>
+    <div class="container">
+        <div class="top-nav">
+            <a class="nav-link" onclick="location.href='/dashboard.html'"><span>←</span> Return to Workspace</a>
+        </div>
+        
+        <h2>
+            <span id="page-title">Proposal Details</span>
+            <span id="header-status"></span>
+        </h2>
+        
+        <div class="grid-info" id="data-container">
+            <div class="field sk-box"></div><div class="field sk-box"></div>
+            <div class="field full sk-box large"></div>
+        </div>
 
-<!-- Notification popup container -->
-<div id="notification-container"></div>
+        <div class="timeline-box" id="timeline-container" style="display: none;">
+            <div class="timeline-title">Audit Log & Review History</div>
+            <ul class="history-list" id="history-list"></ul>
+        </div>
 
-<div class="container">
-
-    <!-- Back button -->
-    <div>
-        <a onclick="location.href='/dashboard.html'">← Return to Workspace</a>
+        <div id="action-area" style="display: none;">
+            <label style="display:block; font-weight:700; font-size:12px; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px; letter-spacing:0.5px;">Submit Committee Feedback</label>
+            <textarea id="v-comment" placeholder="Provide detailed and actionable feedback for the applicant..."></textarea>
+            <div class="btn-group" id="review-btns">
+                <button class="btn btn-app" onclick="updateStatus('Approved')">Approve Grant</button>
+                <button class="btn btn-rej" onclick="updateStatus('Rejected')">Decline Grant</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Page title + status -->
-    <h2>
-        <span id="page-title">Proposal Details</span>
-        <span id="header-status"></span>
-    </h2>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+        const role = localStorage.getItem("role");
+        const userEmail = localStorage.getItem("email");
 
-    <!-- Proposal data will be inserted here -->
-    <div id="data-container"></div>
+        if(!role) window.location.href = "/";
 
-    <!-- History (audit log) -->
-    <div id="timeline-container">
-        <ul id="history-list"></ul>
-    </div>
+        function showNotification(msg, type = 'info') {
+            const icons = { success: '✅', error: '❌', warning: '⚠️' };
+            const c = document.getElementById('notification-container');
+            const t = document.createElement('div'); t.className = `toast toast-${type}`;
+            t.innerHTML = `<span>${icons[type] || '🔔'}</span> <span>${msg}</span>`; 
+            c.appendChild(t);
+            setTimeout(() => { t.style.transform = 'translateX(120%)'; t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3000);
+        }
 
-    <!-- Review section (only for Reviewer/Admin) -->
-    <div id="action-area">
+        async function load() {
+            try {
+                const res = await fetch(`/proposals/${id}`);
+                const p = await res.json();
+                
+                // Inject Real Data
+                document.getElementById("data-container").innerHTML = `
+                    <div class="field full"><label>Project Title</label><p>${p.title}</p></div>
+                    <div class="field"><label>Domain</label><p>${p.domain}</p></div>
+                    <div class="field"><label>Requested Budget</label><p style="color: var(--primary); font-weight: 700;">${p.budget ? `$${p.budget.toLocaleString()}` : '$0'}</p></div>
+                    <div class="field full"><label>Executive Summary</label><p>${p.description}</p></div>
+                    ${p.attachment ? `<div class="field full"><label>Attached Document</label><a href="${p.attachment}" target="_blank" class="btn-download">📄 View PDF Document</a></div>` : ''}
+                `;
+                
+                const statusIcon = p.status === 'Approved' ? '✅' : p.status === 'Rejected' ? '❌' : '⏳';
+                document.getElementById("header-status").innerHTML = `<span class="badge badge-${p.status}" style="font-size:14px; padding:8px 16px;">${statusIcon} ${p.status}</span>`;
 
-        <!-- Comment input -->
-        <textarea id="v-comment" placeholder="Write feedback..."></textarea>
+                document.getElementById("timeline-container").style.display = "block";
+                const historyContainer = document.getElementById("history-list");
+                
+                if (p.history && p.history.length > 0) {
+                    p.history.forEach(log => {
+                        const dateStr = new Date(log.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+                        historyContainer.innerHTML += `
+                            <li class="history-item">
+                                <div class="h-meta">
+                                    <span class="badge badge-${log.status}">${log.status}</span> 
+                                    Authorized By: ${log.reviewedBy} • ${dateStr}
+                                </div>
+                                <div class="h-comment">"${log.comment}"</div>
+                            </li>
+                        `;
+                    });
+                } else {
+                    historyContainer.innerHTML = `<li class="history-item"><div class="h-comment" style="color: var(--text-muted);">No history recorded yet.</div></li>`;
+                }
 
-        <!-- Approve / Reject buttons -->
-        <button onclick="updateStatus('Approved')">Approve</button>
-        <button onclick="updateStatus('Rejected')">Reject</button>
-    </div>
-
-</div>
-
-
-<script>
-
-
-// ---------------- GET URL DATA ----------------
-
-// Extract proposal ID from URL
-const urlParams = new URLSearchParams(window.location.search);
-const id = urlParams.get('id');
-
-// Get user role and email from localStorage
-const role = localStorage.getItem("role");
-const userEmail = localStorage.getItem("email");
-
-// If not logged in → redirect
-if(!role) window.location.href = "/";
-
-
-// ---------------- NOTIFICATION FUNCTION ----------------
-function showNotification(msg, type = 'info') {
-
-    const container = document.getElementById('notification-container');
-
-    const div = document.createElement('div');
-    div.innerText = msg;
-
-    container.appendChild(div);
-
-    // Auto remove after 3 seconds
-    setTimeout(() => div.remove(), 3000);
-}
-
-
-// ---------------- LOAD PROPOSAL DATA ----------------
-async function load() {
-
-    try {
-        // Call backend API
-        const res = await fetch(`/proposals/${id}`);
-
-        // Convert to JSON
-        const p = await res.json();
-
-        // Show proposal details
-        document.getElementById("data-container").innerHTML = `
-            <p><b>Title:</b> ${p.title}</p>
-            <p><b>Domain:</b> ${p.domain}</p>
-            <p><b>Budget:</b> ${p.budget}</p>
-            <p><b>Description:</b> ${p.description}</p>
-        `;
-
-        // Show status (Approved / Pending / Rejected)
-        document.getElementById("header-status").innerText = p.status;
-
-
-        // ---------------- HISTORY ----------------
-
-        const historyContainer = document.getElementById("history-list");
-
-        // Loop through history array
-        p.history.forEach(log => {
-            historyContainer.innerHTML += `
-                <li>
-                    ${log.status} by ${log.reviewedBy}
-                    <br>
-                    ${log.comment}
-                </li>
-            `;
-        });
-
-
-        // ---------------- ROLE BASED ACCESS ----------------
-
-        // Only Reviewer/Admin can review
-        if (role === "Reviewer" || role === "Admin") {
-
-            // Only if still pending
-            if (p.status === "Pending") {
-                document.getElementById("action-area").style.display = "block";
+                if (role === "Reviewer" || role === "Admin") {
+                    if (p.status === "Pending") document.getElementById("action-area").style.display = "block";
+                } else if (role === "Faculty") {
+                    document.getElementById("page-title").innerText = "Status Tracking Log";
+                }
+            } catch (err) {
+                showNotification("Error loading proposal data.", "error");
             }
-
-        } else {
-            // Faculty only sees tracking page
-            document.getElementById("page-title").innerText = "Status Tracking";
         }
 
-    } catch (err) {
-        showNotification("Error loading data");
-    }
-}
-
-
-// ---------------- UPDATE STATUS ----------------
-async function updateStatus(status) {
-
-    // Get comment from textarea
-    const comment = document.getElementById("v-comment").value;
-
-    // Prevent empty comment
-    if(!comment.trim()) {
-        return showNotification("Comment required");
-    }
-
-    try {
-        // Send PUT request to backend
-        const res = await fetch(`/proposals/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-
-            body: JSON.stringify({
-                status,
-                comment,
-                role,
-                email: userEmail
-            })
-        });
-
-        const data = await res.json();
-
-        if(data.success) {
-            showNotification("Updated successfully");
-
-            // Redirect back to dashboard
-            setTimeout(() => {
-                window.location.href="/dashboard.html";
-            }, 1500);
-
-        } else {
-            showNotification("Unauthorized action");
+        async function updateStatus(status) {
+            const comment = document.getElementById("v-comment").value;
+            if(!comment.trim()) return showNotification("Reviewer comment is strictly required for the audit log.", "warning");
+            
+            try {
+                const res = await fetch(`/proposals/${id}`, {
+                    method: "PUT", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status, comment, role, email: userEmail })
+                });
+                
+                const data = await res.json();
+                if(data.success) { 
+                    showNotification(`Proposal successfully updated to ${status}.`, "success"); 
+                    setTimeout(() => window.location.href="/dashboard.html", 1500);
+                } else { showNotification("Security Exception: Unauthorized action.", "error"); }
+            } catch (err) { showNotification("Server communication error.", "error"); }
         }
-
-    } catch (err) {
-        showNotification("Server error");
-    }
-}
-
-
-// Load data on page open
-load();
-
-</script>
-
+        
+        load();
+    </script>
 </body>
 </html>
