@@ -1,40 +1,47 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const multer = require("multer");
-const fs = require("fs");
-const path = require("path");
+// Import required libraries
+const express = require("express"); 
+const mongoose = require("mongoose"); 
+const cors = require("cors"); 
+const multer = require("multer"); 
+const fs = require("fs"); 
+const path = require("path"); 
 
+// Create Express app (main server)
 const app = express();
 
-// Middleware
+// -------------------- MIDDLEWARE --------------------
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
-// Ensure uploads directory exists
+// -------------------- FILE UPLOAD SETUP --------------------
 const uploadDir = path.join(__dirname, "public", "uploads");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-// Multer config
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) =>
-        cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "_"))
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "_"));
+    }
 });
+
 const upload = multer({ storage });
 
-// ✅ MongoDB connection (Render + Atlas)
+// -------------------- DATABASE CONNECTION --------------------
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB Connected"))
 .catch(err => console.log("MongoDB Error:", err));
 
-// Schema
+// -------------------- SCHEMA DEFINITIONS --------------------
 const proposalSchema = new mongoose.Schema({
     title: String,
     description: String,
     domain: String,
     budget: Number,
+    deadline: String, // <-- NEW: Deadline added to schema
     submittedBy: String,
     status: { type: String, default: "Pending" },
     comment: { type: String, default: "" },
@@ -47,21 +54,21 @@ const proposalSchema = new mongoose.Schema({
             date: { type: Date, default: Date.now }
         }
     ]
-}, { timestamps: true });
+}, { timestamps: true }); 
 
 const Proposal = mongoose.model("Proposal", proposalSchema);
+
 const User = mongoose.model("User", {
     email: String,
     password: String,
     role: String
 });
 
-// Login API
+// -------------------- LOGIN API --------------------
 app.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email, password });
-
         if (user) {
             res.json({ success: true, role: user.role });
         } else {
@@ -72,11 +79,10 @@ app.post("/login", async (req, res) => {
     }
 });
 
-// Submit Proposal
+// -------------------- SUBMIT PROPOSAL --------------------
 app.post("/proposals", upload.single("attachment"), async (req, res) => {
     try {
         const data = req.body;
-
         if (req.file) {
             data.attachment = `/uploads/${req.file.filename}`;
         }
@@ -90,13 +96,12 @@ app.post("/proposals", upload.single("attachment"), async (req, res) => {
 
         await proposal.save();
         res.json({ success: true });
-
     } catch (err) {
         res.json({ success: false, error: err.message });
     }
 });
 
-// Get all proposals
+// -------------------- GET ALL PROPOSALS --------------------
 app.get("/proposals", async (req, res) => {
     try {
         const proposals = await Proposal.find().sort({ createdAt: -1 });
@@ -106,7 +111,7 @@ app.get("/proposals", async (req, res) => {
     }
 });
 
-// Get single proposal
+// -------------------- GET SINGLE PROPOSAL --------------------
 app.get("/proposals/:id", async (req, res) => {
     try {
         const proposal = await Proposal.findById(req.params.id);
@@ -116,20 +121,17 @@ app.get("/proposals/:id", async (req, res) => {
     }
 });
 
-// Review proposal
+// -------------------- REVIEW PROPOSAL --------------------
 app.put("/proposals/:id", async (req, res) => {
     try {
         const { status, comment, role, email } = req.body;
-
         if (role !== "Reviewer" && role !== "Admin") {
             return res.status(403).json({ success: false });
         }
 
         const proposal = await Proposal.findById(req.params.id);
-
         proposal.status = status;
         proposal.comment = comment || "";
-
         proposal.history.push({
             status,
             comment,
@@ -138,29 +140,26 @@ app.put("/proposals/:id", async (req, res) => {
 
         await proposal.save();
         res.json({ success: true });
-
     } catch {
         res.json({ success: false });
     }
 });
 
-// Stats API
+// -------------------- STATS API --------------------
 app.get("/proposals/stats/count", async (req, res) => {
     try {
         const count = await Proposal.countDocuments();
         const latest = await Proposal.findOne().sort({ updatedAt: -1 });
-
         res.json({
             count,
             lastUpdate: latest ? latest.updatedAt : null
         });
-
     } catch {
         res.status(500).json({ error: "Server error" });
     }
 });
 
-// Users API
+// -------------------- USERS API --------------------
 app.get("/users", async (req, res) => {
     try {
         const users = await User.find({}, "-password");
@@ -170,11 +169,13 @@ app.get("/users", async (req, res) => {
     }
 });
 
-// Default route
+// -------------------- DEFAULT ROUTE --------------------
 app.get("/", (req, res) => {
     res.redirect("/index.html");
 });
 
-// ✅ IMPORTANT: Dynamic PORT for Render
+// -------------------- START SERVER --------------------
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
