@@ -1,118 +1,194 @@
+<!-- Basic HTML setup -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+
+    <!-- Page title -->
     <title>Proposal Details | GrantSys</title>
+
+    <!-- Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter..." rel="stylesheet">
+
     <style>
-        :root { --primary: #6366f1; }
-        [data-theme="dark"] { --primary: #818cf8; }
-        body { display: flex; justify-content: center; font-family: 'Inter', sans-serif;}
-        .container { max-width: 860px; width: 100%; padding: 40px; box-sizing: border-box;}
-        .data-box { background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;}
-        textarea { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box;}
-        button { padding: 10px 20px; border: none; cursor: pointer; border-radius: 4px;}
-        .btn-approve { background: #10b981; color: white; }
-        .btn-reject { background: #ef4444; color: white; }
-        #action-area { display: none; }
+        /* Theme colors (light mode) */
+        :root {
+            --primary: #6366f1;
+        }
+
+        /* Dark mode styles */
+        [data-theme="dark"] {
+            --primary: #818cf8;
+        }
+
+        /* Page layout */
+        body {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Main container */
+        .container {
+            max-width: 860px;
+        }
     </style>
+
     <script>
+        // Load saved theme
         if(localStorage.getItem("theme") === "dark") {
             document.documentElement.setAttribute("data-theme", "dark");
         }
     </script>
 </head>
+
 <body>
 
+<!-- Notification popup container -->
 <div id="notification-container"></div>
 
 <div class="container">
-    <div style="margin-bottom: 20px;">
-        <a href="/dashboard.html" style="text-decoration: none; color: var(--primary);">← Return to Workspace</a>
+
+    <!-- Back button -->
+    <div>
+        <a onclick="location.href='/dashboard.html'">← Return to Workspace</a>
     </div>
 
+    <!-- Page title + status -->
     <h2>
         <span id="page-title">Proposal Details</span>
-        <span id="header-status" style="float:right; font-size: 16px; padding: 5px 10px; background: #eee; border-radius: 20px;"></span>
+        <span id="header-status"></span>
     </h2>
 
-    <div id="data-container" class="data-box"></div>
+    <!-- Proposal data will be inserted here -->
+    <div id="data-container"></div>
 
-    <h3>History Log</h3>
-    <div id="timeline-container" class="data-box">
+    <!-- History (audit log) -->
+    <div id="timeline-container">
         <ul id="history-list"></ul>
     </div>
 
+    <!-- Review section (only for Reviewer/Admin) -->
     <div id="action-area">
-        <textarea id="v-comment" rows="4" placeholder="Write feedback..."></textarea>
-        <button class="btn-approve" onclick="updateStatus('Approved')">Approve</button>
-        <button class="btn-reject" onclick="updateStatus('Rejected')">Reject</button>
+
+        <!-- Comment input -->
+        <textarea id="v-comment" placeholder="Write feedback..."></textarea>
+
+        <!-- Approve / Reject buttons -->
+        <button onclick="updateStatus('Approved')">Approve</button>
+        <button onclick="updateStatus('Rejected')">Reject</button>
     </div>
+
 </div>
 
+
 <script>
+
+
+// ---------------- GET URL DATA ----------------
+
+// Extract proposal ID from URL
 const urlParams = new URLSearchParams(window.location.search);
 const id = urlParams.get('id');
+
+// Get user role and email from localStorage
 const role = localStorage.getItem("role");
 const userEmail = localStorage.getItem("email");
 
+// If not logged in → redirect
 if(!role) window.location.href = "/";
 
-function showNotification(msg) {
+
+// ---------------- NOTIFICATION FUNCTION ----------------
+function showNotification(msg, type = 'info') {
+
     const container = document.getElementById('notification-container');
+
     const div = document.createElement('div');
     div.innerText = msg;
+
     container.appendChild(div);
+
+    // Auto remove after 3 seconds
     setTimeout(() => div.remove(), 3000);
 }
 
+
+// ---------------- LOAD PROPOSAL DATA ----------------
 async function load() {
+
     try {
+        // Call backend API
         const res = await fetch(`/proposals/${id}`);
+
+        // Convert to JSON
         const p = await res.json();
 
+        // Show proposal details
         document.getElementById("data-container").innerHTML = `
             <p><b>Title:</b> ${p.title}</p>
             <p><b>Domain:</b> ${p.domain}</p>
-            <p><b>Budget:</b> $${p.budget}</p>
-            <p><b>Deadline:</b> ${p.deadline || "Not set"}</p> 
-            <p><b>Description:</b> <br>${p.description}</p>
+            <p><b>Budget:</b> ${p.budget}</p>
+            <p><b>Description:</b> ${p.description}</p>
         `;
 
+        // Show status (Approved / Pending / Rejected)
         document.getElementById("header-status").innerText = p.status;
 
+
+        // ---------------- HISTORY ----------------
+
         const historyContainer = document.getElementById("history-list");
+
+        // Loop through history array
         p.history.forEach(log => {
             historyContainer.innerHTML += `
-                <li style="margin-bottom: 10px;">
-                    <strong>${log.status}</strong> by ${log.reviewedBy}
-                    <br><span style="color: #666;">${log.comment}</span>
+                <li>
+                    ${log.status} by ${log.reviewedBy}
+                    <br>
+                    ${log.comment}
                 </li>
             `;
         });
 
+
+        // ---------------- ROLE BASED ACCESS ----------------
+
+        // Only Reviewer/Admin can review
         if (role === "Reviewer" || role === "Admin") {
+
+            // Only if still pending
             if (p.status === "Pending") {
                 document.getElementById("action-area").style.display = "block";
             }
+
         } else {
+            // Faculty only sees tracking page
             document.getElementById("page-title").innerText = "Status Tracking";
         }
+
     } catch (err) {
         showNotification("Error loading data");
     }
 }
 
+
+// ---------------- UPDATE STATUS ----------------
 async function updateStatus(status) {
+
+    // Get comment from textarea
     const comment = document.getElementById("v-comment").value;
+
+    // Prevent empty comment
     if(!comment.trim()) {
         return showNotification("Comment required");
     }
 
     try {
+        // Send PUT request to backend
         const res = await fetch(`/proposals/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
+
             body: JSON.stringify({
                 status,
                 comment,
@@ -122,20 +198,29 @@ async function updateStatus(status) {
         });
 
         const data = await res.json();
+
         if(data.success) {
-            showNotification(`Proposal ${status}`);
+            showNotification("Updated successfully");
+
+            // Redirect back to dashboard
             setTimeout(() => {
                 window.location.href="/dashboard.html";
             }, 1500);
+
         } else {
             showNotification("Unauthorized action");
         }
+
     } catch (err) {
         showNotification("Server error");
     }
 }
 
+
+// Load data on page open
 load();
+
 </script>
+
 </body>
 </html>

@@ -1,151 +1,316 @@
+<!-- Basic HTML structure -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+
+    <!-- Page title -->
     <title>Dashboard | GrantSys.edu</title>
+
+    <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter..." rel="stylesheet">
+
+    <!-- Chart.js for graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        :root { --primary: #6366f1; --bg-gradient: linear-gradient(...); }
-        [data-theme="dark"] { --bg-gradient: linear-gradient(...); }
-        * { margin: 0; padding: 0; font-family: 'Inter', sans-serif;}
-        body { display: flex; height: 100vh; }
-        nav { width: 280px; padding: 20px; background: #f4f4f5; border-right: 1px solid #e4e4e7;}
-        nav ul { list-style: none; margin-top: 20px;}
-        nav li { padding: 10px; cursor: pointer; }
-        main { flex: 1; padding: 40px; overflow-y: auto;}
-        .stat-card { border-radius: 24px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+        /* CSS variables (colors, theme settings) */
+        :root {
+            --primary: #6366f1;
+            --bg-gradient: linear-gradient(...);
+        }
 
-        /* -----------------------------------------
-           MOBILE RESPONSIVENESS
-        ----------------------------------------- */
-        #view-dashboard { overflow-x: auto; }
+        /* Dark mode styles */
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(...);
+        }
 
-        @media (max-width: 768px) {
-            body { flex-direction: column; height: auto; }
-            nav { width: 100%; border-right: none; border-bottom: 1px solid #e4e4e7; padding: 15px; box-sizing: border-box; }
-            nav ul { display: flex; flex-wrap: wrap; gap: 10px; }
-            nav li { flex: 1 1 calc(50% - 10px); text-align: center; background: #fff; border: 1px solid #ddd; border-radius: 6px; }
-            main { padding: 20px 10px; }
+        /* Reset default styles */
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Body layout */
+        body {
+            display: flex; /* sidebar + main layout */
+            height: 100vh;
+        }
+
+        /* Sidebar navigation */
+        nav {
+            width: 280px;
+        }
+
+        /* Cards for stats */
+        .stat-card {
+            border-radius: 24px;
+        }
+
+        /* Table styling */
+        table {
+            width: 100%;
         }
     </style>
+
     <script>
+        // Load saved theme (dark/light)
         if(localStorage.getItem("theme") === "dark") {
             document.documentElement.setAttribute("data-theme", "dark");
         }
     </script>
 </head>
+
 <body>
 
+<!-- Notification container (top-right alerts) -->
 <div id="notification-container"></div>
 
+
+<!-- ---------------- SIDEBAR ---------------- -->
 <nav id="sidebar">
+
+    <!-- Logo + collapse button -->
     <div class="nav-header">
-        <h2 class="logo">GrantSys</h2>
+        <div class="logo">GrantSys</div>
+
+        <!-- Button to collapse sidebar -->
         <div class="collapse-btn" onclick="toggleSidebar()">◂</div>
     </div>
+
+    <!-- Menu items -->
     <ul>
         <li onclick="openDashboard()">Dashboard</li>
-        <li id="menu-submit" onclick="location.href='/submit.html'">Submit Proposal</li>
+        <li onclick="location.href='/submit.html'">Submit Proposal</li>
         <li onclick="openDashboard()">My Proposals</li>
-        <li id="menu-reviews" onclick="location.href='/dashboard.html'">Review Queue</li>
-        <li id="menu-users" onclick="switchTab('users')">Manage Users</li>
+        <li onclick="openReviewQueue()">Review Queue</li>
+        <li onclick="switchTab('users')">Manage Users</li>
+        <li onclick="switchTab('reports')">Analytics</li>
     </ul>
-    <div style="margin-top:20px; cursor:pointer;" onclick="logout()">Sign Out</div>
+
+    <!-- Theme toggle -->
+    <div onclick="toggleTheme()">Dark Mode</div>
+
+    <!-- Logout -->
+    <div onclick="logout()">Sign Out</div>
 </nav>
 
+
+<!-- ---------------- MAIN CONTENT ---------------- -->
 <main>
+
+    <!-- Header -->
     <div>
         <h1 id="main-title">Project Dashboard</h1>
         <p id="user-role-label"></p>
-        <div id="dynamic-greeting" style="margin-top: 10px; font-weight: bold;">Welcome</div>
     </div>
 
+    <!-- User profile -->
+    <div>
+        <div id="user-avatar">--</div>
+        <div id="dynamic-greeting">Welcome</div>
+    </div>
+
+
+    <!-- ---------------- DASHBOARD VIEW ---------------- -->
     <div id="view-dashboard">
+
+        <!-- Stats cards -->
         <div id="stats-container"></div>
+
+        <!-- Table -->
         <table>
             <thead>
                 <tr>
                     <th>Project Title</th>
                     <th>Domain</th>
                     <th>Budget</th>
-                    <th>Deadline</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
+
+            <!-- Data comes dynamically -->
             <tbody id="tableBody"></tbody>
         </table>
     </div>
+
+
+    <!-- ---------------- USERS VIEW ---------------- -->
+    <div id="view-users">
+        <table>
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Role</th>
+                </tr>
+            </thead>
+            <tbody id="usersBody"></tbody>
+        </table>
+    </div>
+
+
+    <!-- ---------------- REPORTS VIEW ---------------- -->
+    <div id="view-reports">
+
+        <!-- Chart containers -->
+        <canvas id="trendLineChart"></canvas>
+        <canvas id="monthlyBarChart"></canvas>
+        <canvas id="domainPieChart"></canvas>
+    </div>
+
 </main>
 
+
 <script>
+
+
+// ---------------- THEME TOGGLE ----------------
+function toggleTheme() {
+    const body = document.documentElement;
+
+    if (body.getAttribute("data-theme") === "dark") {
+        body.removeAttribute("data-theme");
+        localStorage.setItem("theme", "light");
+    } else {
+        body.setAttribute("data-theme", "dark");
+        localStorage.setItem("theme", "dark");
+    }
+}
+
+
+// ---------------- SIDEBAR TOGGLE ----------------
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('collapsed');
+}
+
+
+// ---------------- USER AUTH ----------------
+
+// Get role and email from localStorage
 const role = localStorage.getItem("role");
 const userEmail = localStorage.getItem("email");
 
+// If not logged in → redirect
 if(!role) window.location.href = "/";
 
+// Show role on screen
 document.getElementById("user-role-label").innerText = `Authenticated as ${role}`;
 
+
+// ---------------- USER PROFILE ----------------
 function initializeUserProfile() {
+
+    // Greeting based on time
     const hour = new Date().getHours();
     let greeting = "Good Evening";
+
     if (hour < 12) greeting = "Good Morning";
     else if (hour < 18) greeting = "Good Afternoon";
+
+    // Extract username from email
     let displayName = userEmail.split('@')[0];
-    document.getElementById("dynamic-greeting").innerText = `${greeting}, ${displayName}`;
+
+    document.getElementById("dynamic-greeting").innerText =
+        `${greeting}, ${displayName}`;
+
 }
 initializeUserProfile();
 
+
+// ---------------- ROLE-BASED UI ----------------
+
+// Hide all menu first
 ["menu-submit", "menu-reviews", "menu-users"].forEach(id => {
     if(document.getElementById(id)) document.getElementById(id).style.display = "none";
 });
 
+// Show based on role
 if (role === "Faculty") {
-    document.getElementById("menu-submit").style.display = "block";
-} else if (role === "Reviewer") {
-    document.getElementById("menu-reviews").style.display = "block";
-} else if (role === "Admin") {
-    document.getElementById("menu-users").style.display = "block";
+    document.getElementById("menu-submit").style.display = "flex";
 }
+else if (role === "Reviewer") {
+    document.getElementById("menu-reviews").style.display = "flex";
+}
+else if (role === "Admin") {
+    document.getElementById("menu-users").style.display = "flex";
+}
+
+
+// ---------------- LOAD PROPOSALS ----------------
 
 let allProposals = [];
 
 async function loadProposals() {
+
+    // Call backend API
     const res = await fetch("/proposals");
+
+    // Convert to JSON
     let data = await res.json();
+
+    // Filter if Faculty
     if (role === "Faculty") {
         data = data.filter(p => p.submittedBy === userEmail);
     }
+
     allProposals = data;
+
+    // Show in table
     renderTable(data);
 }
 
+
+// ---------------- RENDER TABLE ----------------
 function renderTable(data) {
+
     const table = document.getElementById("tableBody");
     table.innerHTML = "";
+
     data.forEach(p => {
         table.innerHTML += `
             <tr>
                 <td>${p.title}</td>
                 <td>${p.domain}</td>
-                <td>$${p.budget}</td>
-                <td>${p.deadline || "Not set"}</td> 
+                <td>${p.budget}</td>
                 <td>${p.status}</td>
-                <td><a href="/review.html?id=${p._id}" style="color: blue;">View Details</a></td>
             </tr>
         `;
     });
 }
 
+
+// ---------------- LOAD USERS ----------------
+async function loadUsers() {
+
+    const res = await fetch("/users");
+    const users = await res.json();
+
+    const tbody = document.getElementById("usersBody");
+
+    users.forEach(u => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${u.email}</td>
+                <td>${u.role}</td>
+            </tr>
+        `;
+    });
+}
+
+
+// ---------------- LOGOUT ----------------
 function logout() {
     localStorage.clear();
     window.location.href = "/";
 }
 
+
+// Initial load
 loadProposals();
+
 </script>
+
 </body>
 </html>
