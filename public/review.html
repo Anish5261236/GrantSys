@@ -14,15 +14,6 @@
             --card-bg: #ffffff; --input-bg: rgba(255,255,255,0.9);
             --skeleton-base: #e2e8f0; --skeleton-shine: #f8fafc;
         }
-        [data-theme="dark"] {
-            --primary: #818cf8; --primary-hover: #6366f1; --primary-glow: rgba(129, 140, 248, 0.3);
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --glass-bg: rgba(30, 41, 59, 0.65); --glass-border: rgba(255, 255, 255, 0.08);
-            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            --text-main: #f8fafc; --text-muted: #94a3b8;
-            --card-bg: #1e293b; --input-bg: rgba(15, 23, 42, 0.8);
-            --skeleton-base: #1e293b; --skeleton-shine: #334155;
-        }
 
         body { margin: 0; background: var(--bg-gradient); font-family: 'Inter', sans-serif; display: flex; justify-content: center; padding: 64px 24px; transition: 0.5s ease; color: var(--text-main);}
         .container { width: 100%; max-width: 860px; background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 48px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); animation: fadeInUp 0.5s ease;}
@@ -79,9 +70,6 @@
         @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
-    <script>
-        if(localStorage.getItem("theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");
-    </script>
 </head>
 <body>
     <div id="notification-container"></div>
@@ -96,6 +84,7 @@
         </h2>
         
         <div class="grid-info" id="data-container">
+            <div class="field sk-box"></div><div class="field sk-box"></div>
             <div class="field sk-box"></div><div class="field sk-box"></div>
             <div class="field full sk-box large"></div>
         </div>
@@ -141,9 +130,11 @@
                 document.getElementById("data-container").innerHTML = `
                     <div class="field full"><label>Project Title</label><p>${p.title}</p></div>
                     <div class="field"><label>Domain</label><p>${p.domain}</p></div>
-                    <div class="field"><label>Requested Budget</label><p style="color: var(--primary); font-weight: 700;">${p.budget ? `$${p.budget.toLocaleString()}` : '$0'}</p></div>
+                    <div class="field"><label>Requested Budget</label><p style="color: var(--primary); font-weight: 700;">${p.budget ? '$' + p.budget.toLocaleString() : '$0'}</p></div>
+                    <div class="field"><label>Submission Deadline</label><p style="color: #ef4444; font-weight: 700;">${p.deadline ? new Date(p.deadline).toLocaleDateString() : 'Not Specified'}</p></div>
+                    <div class="field"><label>Applicant Email</label><p>${p.submittedBy || 'Unknown'}</p></div>
                     <div class="field full"><label>Executive Summary</label><p>${p.description}</p></div>
-                    ${p.attachment ? `<div class="field full"><label>Attached Document</label><a href="${p.attachment}" target="_blank" class="btn-download">📄 View PDF Document</a></div>` : ''}
+                    ${p.attachment ? '<div class="field full"><label>Attached Document</label><a href="' + p.attachment + '" target="_blank" class="btn-download">📄 View PDF Document</a></div>' : ''}
                 `;
                 
                 const statusIcon = p.status === 'Approved' ? '✅' : p.status === 'Rejected' ? '❌' : '⏳';
@@ -166,7 +157,7 @@
                         `;
                     });
                 } else {
-                    historyContainer.innerHTML = `<li class="history-item"><div class="h-comment" style="color: var(--text-muted);">No history recorded yet.</div></li>`;
+                    historyContainer.innerHTML = '<li class="history-item"><div class="h-comment" style="color: var(--text-muted);">No history recorded yet.</div></li>';
                 }
 
                 if (role === "Reviewer" || role === "Admin") {

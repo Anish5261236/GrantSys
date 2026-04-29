@@ -16,16 +16,6 @@
             --skeleton-base: #e2e8f0; --skeleton-shine: #f8fafc;
         }
 
-        [data-theme="dark"] {
-            --primary: #818cf8; --primary-hover: #6366f1; --primary-glow: rgba(129, 140, 248, 0.3);
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --glass-bg: rgba(30, 41, 59, 0.65); --glass-border: rgba(255, 255, 255, 0.08);
-            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            --text-main: #f8fafc; --text-muted: #94a3b8;
-            --card-bg: #1e293b; --input-bg: rgba(15, 23, 42, 0.8);
-            --skeleton-base: #1e293b; --skeleton-shine: #334155;
-        }
-
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--bg-gradient); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: background 0.5s ease, color 0.5s ease; }
 
@@ -59,13 +49,11 @@
         nav li::after { content: attr(data-tooltip); position: absolute; left: calc(100% + 10px); background: var(--text-main); color: var(--card-bg); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; white-space: nowrap; opacity: 0; pointer-events: none; transform: translateX(-10px); transition: 0.3s; z-index: 100;}
         nav.collapsed li:hover::after { opacity: 1; transform: translateX(0); }
 
-        .theme-btn, .logout-btn { background: var(--input-bg); border: 1px solid var(--glass-border); color: var(--text-main); padding: 14px; border-radius: 14px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; transition: all 0.2s; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); overflow: hidden; white-space: nowrap;}
-        nav.collapsed .theme-btn, nav.collapsed .logout-btn { padding: 14px 0; justify-content: center; }
-        nav.collapsed .theme-btn span, nav.collapsed .logout-btn span { display: none; }
-        .theme-btn:hover { background: rgba(99, 102, 241, 0.08); color: var(--primary); border-color: var(--primary);}
-        .theme-btn:active, .logout-btn:active { transform: scale(0.96); }
-        .logout-btn { background: transparent; color: #ef4444; border: 1px solid transparent; box-shadow: none; margin-top: 8px;}
+        .logout-btn { background: transparent; border: 1px solid transparent; color: #ef4444; padding: 14px; border-radius: 14px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; transition: all 0.2s; font-size: 14px; overflow: hidden; white-space: nowrap; margin-top: 8px;}
+        nav.collapsed .logout-btn { padding: 14px 0; justify-content: center; }
+        nav.collapsed .logout-btn span { display: none; }
         .logout-btn:hover { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.2); }
+        .logout-btn:active { transform: scale(0.96); }
 
         /* 🖥️ MAIN WORKSPACE */
         main { flex: 1; overflow-y: auto; padding: 48px 56px; scroll-behavior: smooth; }
@@ -134,9 +122,6 @@
         .page-btns button:active:not(:disabled) { transform: scale(0.95); }
         .page-btns button:disabled { opacity: 0.4; cursor: not-allowed; }
     </style>
-    <script>
-        if(localStorage.getItem("theme") === "dark") document.documentElement.setAttribute("data-theme", "dark");
-    </script>
 </head>
 <body>
     <div id="notification-container"></div>
@@ -166,9 +151,6 @@
                 <span>📊</span><span class="menu-text">Analytics</span>
             </li>
         </ul>
-        <div class="theme-btn" data-tooltip="Theme" onclick="toggleTheme()" id="theme-toggle-btn">
-            <span>🌙</span><span class="menu-text">Dark Mode</span>
-        </div>
         <div class="logout-btn" data-tooltip="Sign Out" onclick="logout()">
             <span>🚪</span><span class="menu-text">Sign Out</span>
         </div>
@@ -213,7 +195,7 @@
                 </div>
                 
                 <table id="proposalTable">
-                    <thead><tr><th>Project Title</th><th>Domain</th><th>Budget</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Project Title</th><th>Domain</th><th>Budget</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="tableBody"></tbody>
                 </table>
                 <div class="pagination">
@@ -260,25 +242,6 @@
     </main>
 
 <script>
-    function toggleTheme() {
-        const body = document.documentElement;
-        const btn = document.getElementById("theme-toggle-btn");
-        if (body.getAttribute("data-theme") === "dark") {
-            body.removeAttribute("data-theme");
-            localStorage.setItem("theme", "light");
-            btn.innerHTML = "<span>🌙</span><span class='menu-text'>Dark Mode</span>";
-        } else {
-            body.setAttribute("data-theme", "dark");
-            localStorage.setItem("theme", "dark");
-            btn.innerHTML = "<span>☀️</span><span class='menu-text'>Light Mode</span>";
-        }
-        if(document.getElementById('view-reports').style.display === 'block') generateReports(); 
-    }
-    
-    if(localStorage.getItem("theme") === "dark") {
-        document.getElementById("theme-toggle-btn").innerHTML = "<span>☀️</span><span class='menu-text'>Light Mode</span>";
-    }
-
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
         const btn = document.querySelector('.collapse-btn');
@@ -298,8 +261,12 @@
         else if (hour < 18) greeting = "Good Afternoon";
         
         let displayName = userEmail ? userEmail.split('@')[0] : "User";
-        if (userEmail && userEmail.toLowerCase().includes("anishkarthik")) displayName = "Anish Karthik";
-        else displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+        
+        if (displayName.toLowerCase() === "anish" || displayName.toLowerCase() === "anishkarthik") {
+            displayName = "Anish Karthik";
+        } else {
+            displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+        }
         
         document.getElementById("dynamic-greeting").innerText = `${greeting}, ${displayName} 👋`;
         const initials = displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -378,7 +345,7 @@
 
     function renderSkeletons() {
         document.getElementById("stats-container").innerHTML = Array(4).fill().map(() => `<div class="stat-card"><div class="skeleton sk-text"></div><div class="skeleton sk-title"></div></div>`).join('');
-        document.getElementById("tableBody").innerHTML = Array(5).fill().map(() => `<tr><td><div class="skeleton sk-text"></div></td><td><div class="skeleton sk-text" style="width:40%;"></div></td><td><div class="skeleton sk-text" style="width:30%;"></div></td><td><div class="skeleton sk-badge"></div></td><td><div class="skeleton sk-badge"></div></td></tr>`).join('');
+        document.getElementById("tableBody").innerHTML = Array(5).fill().map(() => `<tr><td><div class="skeleton sk-text"></div></td><td><div class="skeleton sk-text" style="width:40%;"></div></td><td><div class="skeleton sk-text" style="width:30%;"></div></td><td><div class="skeleton sk-text"></div></td><td><div class="skeleton sk-badge"></div></td><td><div class="skeleton sk-badge"></div></td></tr>`).join('');
     }
 
     // Interactive Count-Up Animation
@@ -413,7 +380,7 @@
                 isInitialLoad = false;
             } else { updateStatCards(false); }
         } catch (err) {
-            if (isInitialLoad) document.getElementById("tableBody").innerHTML = `<tr><td colspan="5" style="text-align:center; color: #ef4444;">Connection Error. Retrying...</td></tr>`;
+            if (isInitialLoad) document.getElementById("tableBody").innerHTML = `<tr><td colspan="6" style="text-align:center; color: #ef4444;">Connection Error. Retrying...</td></tr>`;
         }
     }
 
@@ -470,12 +437,13 @@
         tBody.innerHTML = "";
         
         if (paginated.length === 0) {
-            tBody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🗂️</div><div class="empty-title">No Proposals Found</div><div class="empty-desc">There is no data matching your current filters.</div></div></td></tr>`;
+            tBody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🗂️</div><div class="empty-title">No Proposals Found</div><div class="empty-desc">There is no data matching your current filters.</div></div></td></tr>`;
         }
 
         paginated.forEach(p => {
             const statusClass = `status-${p.status}`;
             const displayBudget = p.budget ? `$${p.budget.toLocaleString()}` : '$0';
+            const displayDeadline = p.deadline ? new Date(p.deadline).toLocaleDateString() : 'N/A';
             let actionBtn = `<span style="color: var(--text-muted); font-size: 13px;">No Action</span>`;
 
             if (role === "Reviewer" || role === "Admin") {
@@ -490,6 +458,7 @@
                 <td style="font-weight: 600; color: var(--text-main);">${p.title}</td>
                 <td>${p.domain}</td>
                 <td style="color:var(--primary); font-weight:700;">${displayBudget}</td>
+                <td style="color:#ef4444; font-weight:600;">${displayDeadline}</td>
                 <td><span class="badge ${statusClass}">${p.status === 'Approved' ? '✅ ' : p.status === 'Rejected' ? '❌ ' : '⏳ '}${p.status}</span></td>
                 <td>${actionBtn}</td>
             </tr>`;
@@ -539,10 +508,9 @@
             if(p.status === 'Approved') approvedMonthly[month]++;
         });
 
-        const textColor = document.documentElement.getAttribute("data-theme") === "dark" ? "#94a3b8" : "#64748b";
-        const gridColor = document.documentElement.getAttribute("data-theme") === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
-        Chart.defaults.color = textColor;
+        Chart.defaults.color = "#64748b";
         Chart.defaults.font.family = "'Inter', sans-serif";
+        const gridColor = "rgba(0,0,0,0.05)";
 
         if (barChart) barChart.destroy();
         barChart = new Chart(document.getElementById('monthlyBarChart').getContext('2d'), {

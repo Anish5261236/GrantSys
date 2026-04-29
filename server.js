@@ -38,7 +38,7 @@ const proposalSchema = new mongoose.Schema({
     description: String,
     domain: String,
     budget: Number,
-    deadline: String, // Ensure deadline is saved in the database
+    deadline: String, 
     submittedBy: String,
     status: { type: String, default: "Pending" },
     comment: { type: String, default: "" },
@@ -81,7 +81,6 @@ app.post("/proposals", upload.single("attachment"), async (req, res) => {
     try {
         const data = req.body;
         
-        // Fixed: Added backticks to correctly process the variable
         if (req.file) {
             data.attachment = `/uploads/${req.file.filename}`; 
         }
@@ -176,6 +175,5 @@ app.get("/", (req, res) => {
 // -------------------- START SERVER --------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    // Fixed: Added backticks to correctly process the variable
     console.log(`Server running on port ${PORT}`); 
 });
