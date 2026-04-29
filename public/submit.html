@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit Proposal | GrantSys</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -28,6 +29,9 @@
         input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); transform: translateY(-2px);}
         textarea { min-height: 120px; resize: vertical; }
         
+        .input-row { display: flex; gap: 16px; }
+        .input-item { flex: 1; }
+
         /* Drag & Drop UI */
         .drop-zone { border: 2px dashed var(--glass-border); border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.3s ease; background: var(--input-bg); margin-bottom: 32px; position: relative; overflow: hidden;}
         .drop-zone:hover, .drop-zone.dragover { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); transform: translateY(-2px);}
@@ -35,7 +39,7 @@
         .drop-zone:hover .icon { transform: scale(1.1) translateY(-4px); }
         .drop-zone p { color: var(--text-muted); font-size: 14px; font-weight: 500;}
         .drop-zone p span { color: var(--primary); font-weight: 700; text-decoration: underline;}
-        .file-info { font-size: 14px; font-weight: 700; color: var(--primary); margin-top: 10px; display: none; background: rgba(99, 102, 241, 0.1); padding: 8px 16px; border-radius: 8px;}
+        .file-info { font-size: 14px; font-weight: 700; color: var(--primary); margin-top: 10px; display: none; background: rgba(99, 102, 241, 0.1); padding: 8px 16px; border-radius: 8px; word-break: break-all;}
         
         .btn-submit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px var(--primary-glow);}
         .btn-submit:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 8px 24px var(--primary-glow); }
@@ -46,6 +50,15 @@
         .toast-success { border-left-color: #10b981; } .toast-warning { border-left-color: #f59e0b; } .toast-error { border-left-color: #ef4444; }
         @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            body { padding: 16px; align-items: flex-start; }
+            .form-box { padding: 32px 20px; width: 100%; }
+            .input-row { flex-direction: column; gap: 0; }
+            h2 { font-size: 24px; margin-bottom: 24px; }
+            #notification-container { top: 16px; right: 16px; left: 16px; width: auto; }
+        }
     </style>
 </head>
 <body>
@@ -58,10 +71,10 @@
         <label>Project Title</label>
         <input id="title" placeholder="e.g., Quantum Computing Architecture">
         
-        <div style="display: flex; gap: 16px;">
-            <div style="flex: 1;"><label>Domain</label><input id="domain" placeholder="e.g., Computer Science"></div>
-            <div style="flex: 1;"><label>Budget ($)</label><input id="budget" type="number" placeholder="e.g., 15000"></div>
-            <div style="flex: 1;"><label>Deadline</label><input id="deadline" type="date"></div>
+        <div class="input-row">
+            <div class="input-item"><label>Domain</label><input id="domain" placeholder="e.g., Computer Science"></div>
+            <div class="input-item"><label>Budget ($)</label><input id="budget" type="number" placeholder="e.g., 15000"></div>
+            <div class="input-item"><label>Deadline</label><input id="deadline" type="date"></div>
         </div>
 
         <label>Executive Summary</label>
@@ -90,7 +103,6 @@
             setTimeout(() => { t.style.transform = 'translateX(120%)'; t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3000);
         }
 
-        // Drag & Drop Logic
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('attachment');
         const fileInfo = document.getElementById('file-info');

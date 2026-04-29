@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Proposal Details | GrantSys</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -40,7 +41,7 @@
         .history-list { list-style: none; padding: 0; margin: 0; }
         .history-item { padding: 20px; border-left: 4px solid var(--primary); background: var(--input-bg); margin-bottom: 12px; border-radius: 0 12px 12px 0; transition: 0.3s; }
         .history-item:hover { transform: translateX(6px); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-        .h-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; display: flex; align-items: center; gap: 8px;}
+        .h-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;}
         .h-comment { font-size: 15px; color: var(--text-main); font-weight: 500;}
         
         .badge { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;}
@@ -69,6 +70,17 @@
         .toast-success { border-left-color: #10b981; } .toast-warning { border-left-color: #f59e0b; } .toast-error { border-left-color: #ef4444; }
         @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            body { padding: 24px 16px; align-items: flex-start; }
+            .container { padding: 32px 20px; width: 100%; }
+            h2 { flex-direction: column; align-items: flex-start; gap: 16px; font-size: 24px; }
+            .grid-info { grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; }
+            .timeline-box { padding: 24px 16px; }
+            .btn-group { flex-direction: column; gap: 12px; }
+            #notification-container { top: 16px; right: 16px; left: 16px; width: auto; }
+        }
     </style>
 </head>
 <body>
@@ -126,13 +138,12 @@
                 const res = await fetch(`/proposals/${id}`);
                 const p = await res.json();
                 
-                // Inject Real Data
                 document.getElementById("data-container").innerHTML = `
                     <div class="field full"><label>Project Title</label><p>${p.title}</p></div>
                     <div class="field"><label>Domain</label><p>${p.domain}</p></div>
                     <div class="field"><label>Requested Budget</label><p style="color: var(--primary); font-weight: 700;">${p.budget ? '$' + p.budget.toLocaleString() : '$0'}</p></div>
                     <div class="field"><label>Submission Deadline</label><p style="color: #ef4444; font-weight: 700;">${p.deadline ? new Date(p.deadline).toLocaleDateString() : 'Not Specified'}</p></div>
-                    <div class="field"><label>Applicant Email</label><p>${p.submittedBy || 'Unknown'}</p></div>
+                    <div class="field full"><label>Applicant Email</label><p style="word-break: break-all;">${p.submittedBy || 'Unknown'}</p></div>
                     <div class="field full"><label>Executive Summary</label><p>${p.description}</p></div>
                     ${p.attachment ? '<div class="field full"><label>Attached Document</label><a href="' + p.attachment + '" target="_blank" class="btn-download">📄 View PDF Document</a></div>' : ''}
                 `;
@@ -150,7 +161,8 @@
                             <li class="history-item">
                                 <div class="h-meta">
                                     <span class="badge badge-${log.status}">${log.status}</span> 
-                                    Authorized By: ${log.reviewedBy} • ${dateStr}
+                                    <span>Auth: ${log.reviewedBy}</span>
+                                    <span>• ${dateStr}</span>
                                 </div>
                                 <div class="h-comment">"${log.comment}"</div>
                             </li>
