@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit Proposal | GrantSys</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+
     <style>
         :root {
             --primary: #6366f1; --primary-hover: #4f46e5; --primary-glow: rgba(99, 102, 241, 0.4);
@@ -14,169 +20,111 @@
             --text-main: #0f172a; --text-muted: #64748b;
             --card-bg: #ffffff; --input-bg: rgba(255,255,255,0.9);
         }
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --glass-bg: rgba(30, 41, 59, 0.7); --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+            --card-bg: #1e293b; --input-bg: rgba(15, 23, 42, 0.8);
+        }
 
-        body { margin: 0; background: var(--bg-gradient); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Inter', sans-serif; padding: 24px; transition: 0.4s; }
+        body { margin: 0; background: var(--bg-gradient); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Inter', sans-serif; transition: 0.4s; }
         
-        .form-box { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 48px; border-radius: 24px; width: 100%; max-width: 600px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); animation: fadeInUp 0.5s ease;}
-        .top-nav { display: flex; justify-content: space-between; margin-bottom: 32px; }
-        .nav-link { color: var(--text-muted); text-decoration: none; font-weight: 600; cursor: pointer; font-size: 14px; transition: 0.2s; display: flex; align-items: center; gap: 8px;}
-        .nav-link:hover { color: var(--primary); transform: translateX(-4px);}
+        .form-box { background: var(--glass-bg); backdrop-filter: blur(20px); padding: 48px; border-radius: 24px; width: 100%; max-width: 600px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .nav-link { color: var(--text-muted); text-decoration: none; font-weight: 600; cursor: pointer; }
+        .theme-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-main); }
         
-        h2 { margin-bottom: 32px; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;}
-        
-        label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;}
-        input, textarea { width: 100%; padding: 16px; margin-bottom: 24px; border-radius: 12px; border: 1px solid var(--glass-border); color: var(--text-main); outline: none; box-sizing: border-box; font-family: inherit; font-size: 14px; background: var(--input-bg); transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
-        input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); transform: translateY(-2px);}
-        textarea { min-height: 120px; resize: vertical; }
-        
+        /* FORM ELEMENTS */
+        label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;}
+        input, textarea { width: 100%; padding: 16px; margin-bottom: 24px; border-radius: 12px; border: 1px solid var(--glass-border); color: var(--text-main); background: var(--input-bg); box-sizing: border-box; outline: none; transition: 0.3s;}
+        input:focus, textarea:focus { border-color: var(--primary); }
         .input-row { display: flex; gap: 16px; }
         .input-item { flex: 1; }
 
-        /* Drag & Drop UI */
-        .drop-zone { border: 2px dashed var(--glass-border); border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.3s ease; background: var(--input-bg); margin-bottom: 32px; position: relative; overflow: hidden;}
-        .drop-zone:hover, .drop-zone.dragover { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); transform: translateY(-2px);}
-        .drop-zone .icon { font-size: 40px; margin-bottom: 12px; display: block; transition: 0.3s;}
-        .drop-zone:hover .icon { transform: scale(1.1) translateY(-4px); }
-        .drop-zone p { color: var(--text-muted); font-size: 14px; font-weight: 500;}
-        .drop-zone p span { color: var(--primary); font-weight: 700; text-decoration: underline;}
-        .file-info { font-size: 14px; font-weight: 700; color: var(--primary); margin-top: 10px; display: none; background: rgba(99, 102, 241, 0.1); padding: 8px 16px; border-radius: 8px; word-break: break-all;}
+        /* DRAG AND DROP ZONE UI */
+        .drop-zone { border: 2px dashed var(--glass-border); border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; background: var(--input-bg); margin-bottom: 32px;}
+        .drop-zone.dragover { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); }
         
-        .btn-submit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px var(--primary-glow);}
-        .btn-submit:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 8px 24px var(--primary-glow); }
-        .btn-submit:active { transform: scale(0.96); box-shadow: none;}
-
-        #notification-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 12px;}
-        .toast { background: var(--card-bg); color: var(--text-main); padding: 16px 24px; border-radius: 16px; box-shadow: var(--glass-shadow); border: 1px solid var(--glass-border); border-left: 6px solid var(--primary); display: flex; align-items: center; gap: 14px; animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; font-weight: 500; font-size: 14px;}
-        .toast-success { border-left-color: #10b981; } .toast-warning { border-left-color: #f59e0b; } .toast-error { border-left-color: #ef4444; }
-        @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Mobile Adjustments */
-        @media (max-width: 768px) {
-            body { padding: 16px; align-items: flex-start; }
-            .form-box { padding: 32px 20px; width: 100%; }
-            .input-row { flex-direction: column; gap: 0; }
-            h2 { font-size: 24px; margin-bottom: 24px; }
-            #notification-container { top: 16px; right: 16px; left: 16px; width: auto; }
-        }
+        .btn-submit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div id="notification-container"></div>
     <div class="form-box">
         <div class="top-nav">
             <a class="nav-link" onclick="location.href='/dashboard.html'"><span>←</span> Back to Dashboard</a>
+            <button class="theme-btn" onclick="toggleTheme()" title="Toggle Theme">🌗</button>
         </div>
-        <h2>Submit Research Proposal</h2>
+        
+        <h2 style="margin-bottom: 32px; font-weight: 800;">Submit Research Proposal</h2>
+        
+        <!-- Standard Inputs -->
         <label>Project Title</label>
         <input id="title" placeholder="e.g., Quantum Computing Architecture">
         
         <div class="input-row">
-            <div class="input-item"><label>Domain</label><input id="domain" placeholder="e.g., Computer Science"></div>
-            <div class="input-item"><label>Budget ($)</label><input id="budget" type="number" placeholder="e.g., 15000"></div>
-            <div class="input-item"><label>Deadline</label><input id="deadline" type="date"></div>
+            <div class="input-item"><label>Domain</label><input id="domain"></div>
+            <div class="input-item"><label>Budget ($)</label><input id="budget" type="number"></div>
         </div>
 
         <label>Executive Summary</label>
-        <textarea id="description" placeholder="Briefly describe the methodology and impact..."></textarea>
+        <textarea id="description"></textarea>
 
+        <!-- Hidden input connected to visual drag and drop zone -->
         <label>Upload Supporting Documents (PDF)</label>
         <div class="drop-zone" id="drop-zone" onclick="document.getElementById('attachment').click()">
-            <span class="icon">📄</span>
-            <p id="drop-text">Drag & Drop your file here or <span>browse</span></p>
-            <div class="file-info" id="file-info"></div>
+            <p id="drop-text">Drag & Drop your file here</p>
             <input type="file" id="attachment" accept=".pdf" hidden>
         </div>
 
-        <button class="btn-submit" id="submitBtn" onclick="submitProposal()">Initialize Secure Submission</button>
+        <button class="btn-submit" onclick="submitProposal()">Initialize Secure Submission</button>
     </div>
     
     <script>
-        if(!localStorage.getItem("role")) window.location.href = "/";
-        
-        function showNotification(msg, type = 'info') {
-            const icons = { success: '✅', error: '❌', warning: '⚠️' };
-            const c = document.getElementById('notification-container');
-            const t = document.createElement('div'); t.className = `toast toast-${type}`;
-            t.innerHTML = `<span>${icons[type] || '🔔'}</span> <span>${msg}</span>`; 
-            c.appendChild(t);
-            setTimeout(() => { t.style.transform = 'translateX(120%)'; t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3000);
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
         }
 
+        /* DRAG & DROP LOGIC: Intercepts native browser file drops and assigns them to the hidden file input */
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('attachment');
-        const fileInfo = document.getElementById('file-info');
-        const dropText = document.getElementById('drop-text');
 
+        // Prevent browser from opening files in a new tab when dragged over
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, preventDefaults, false);
+            dropZone.addEventListener(eventName, e => e.preventDefault(), false);
         });
-        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
 
+        // Add visual queue (highlight border) when user hovers a file
         ['dragenter', 'dragover'].forEach(eventName => dropZone.classList.add('dragover'));
         ['dragleave', 'drop'].forEach(eventName => dropZone.classList.remove('dragover'));
 
-        dropZone.addEventListener('drop', (e) => {
-            let dt = e.dataTransfer;
-            let files = dt.files;
-            fileInput.files = files;
-            updateFileInfo();
+        // Handle the actual drop
+        dropZone.addEventListener('drop', e => {
+            fileInput.files = e.dataTransfer.files;
+            document.getElementById('drop-text').innerText = `Selected: ${fileInput.files[0].name}`;
         });
 
-        fileInput.addEventListener('change', updateFileInfo);
-
-        function updateFileInfo() {
-            if (fileInput.files.length > 0) {
-                dropText.style.display = 'none';
-                fileInfo.style.display = 'inline-block';
-                fileInfo.innerText = `Selected: ${fileInput.files[0].name}`;
-            }
-        }
-
+        /* SUBMISSION HANDLER: Compiles text and files into a FormData object suitable for API transport */
         async function submitProposal() {
             const title = document.getElementById("title").value;
             const description = document.getElementById("description").value;
             const domain = document.getElementById("domain").value;
             const budget = document.getElementById("budget").value;
-            const deadline = document.getElementById("deadline").value;
-            const btn = document.getElementById("submitBtn");
 
-            if(!title || !description || !domain || !budget || !deadline) return showNotification("Please complete all fields, including the deadline.", "warning");
-            
-            btn.innerText = "Processing...";
-            btn.style.opacity = "0.7";
-            btn.style.pointerEvents = "none";
-
+            // FormData is specifically required when sending files via fetch, unlike raw JSON
             const formData = new FormData();
             formData.append("title", title);
             formData.append("description", description);
             formData.append("domain", domain);
             formData.append("budget", budget);
-            formData.append("deadline", deadline);
             formData.append("submittedBy", localStorage.getItem("email"));
+            
             if (fileInput.files[0]) formData.append("attachment", fileInput.files[0]);
             
-            try {
-                const res = await fetch("/proposals", { method: "POST", body: formData });
-                const result = await res.json();
-                if (result.success) { 
-                    showNotification("Proposal committed successfully!", "success"); 
-                    setTimeout(() => window.location.href = "/dashboard.html", 1500);
-                } else { 
-                    showNotification("Data validation error.", "error"); 
-                    resetBtn();
-                }
-            } catch (err) {
-                showNotification("Server error. Connection refused.", "error");
-                resetBtn();
-            }
-        }
-
-        function resetBtn() {
-            const btn = document.getElementById("submitBtn");
-            btn.innerText = "Initialize Secure Submission";
-            btn.style.opacity = "1";
-            btn.style.pointerEvents = "all";
+            await fetch("/proposals", { method: "POST", body: formData });
+            window.location.href = "/dashboard.html";
         }
     </script>
 </body>

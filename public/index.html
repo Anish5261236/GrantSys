@@ -5,7 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | GrantSys</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- EARLY THEME INITIALIZATION -->
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+
     <style>
+        /* CSS VARIABLES FOR LIGHT & DARK MODE */
         :root {
             --primary: #6366f1; --primary-hover: #4f46e5; --primary-glow: rgba(99, 102, 241, 0.4);
             --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -14,81 +22,74 @@
             --text-main: #0f172a; --text-muted: #64748b;
             --card-bg: #ffffff; --input-bg: rgba(255,255,255,0.9);
         }
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --glass-bg: rgba(30, 41, 59, 0.7); --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+            --card-bg: #1e293b; --input-bg: rgba(15, 23, 42, 0.8);
+        }
 
+        /* LAYOUT STYLES: Centers the login box vertically and horizontally */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--bg-gradient); color: var(--text-main); display: flex; justify-content: center; align-items: center; height: 100vh; transition: background 0.5s ease, color 0.5s ease; padding: 16px; }
 
-        .login-wrapper { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; width: 100%; display: flex; justify-content: center; }
-        .login-box { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 48px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .login-box:hover { transform: translateY(-4px); box-shadow: 0 16px 40px var(--primary-glow); border-color: var(--primary); }
+        .login-box { background: var(--glass-bg); backdrop-filter: blur(20px); padding: 48px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); position: relative; }
         
-        .logo { font-size: 28px; font-weight: 800; background: linear-gradient(90deg, var(--primary), #a855f7); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; letter-spacing: -0.5px;}
-        p.subtitle { color: var(--text-muted); font-size: 14px; font-weight: 500; margin-bottom: 32px; }
-
+        /* INPUT FIELD STYLING */
         .input-group { text-align: left; margin-bottom: 20px; }
-        label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--glass-border); color: var(--text-main); outline: none; font-size: 14px; font-weight: 500; background: var(--input-bg); transition: all 0.3s; box-shadow: 0 2px 6px rgba(0,0,0,0.02);}
-        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); transform: translateY(-2px);}
+        label { display: block; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; }
+        input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--glass-border); color: var(--text-main); background: var(--input-bg); outline: none;}
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
         
-        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 15px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 8px; box-shadow: 0 4px 12px var(--primary-glow);}
-        button:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 8px 20px var(--primary-glow); }
-        button:active { transform: scale(0.96); box-shadow: none; }
-        button.loading { color: transparent; position: relative; pointer-events: none; }
-        button.loading::after { content: ""; position: absolute; width: 20px; height: 20px; border: 3px solid white; border-radius: 50%; border-top-color: transparent; animation: spin 0.8s linear infinite; left: 50%; top: 50%; transform: translate(-50%, -50%); }
-
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
-
-        #notification-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; width: calc(100% - 48px); max-width: 350px;}
-        .toast { background: var(--card-bg); color: var(--text-main); padding: 16px 24px; border-radius: 16px; box-shadow: var(--glass-shadow); border: 1px solid var(--glass-border); border-left: 6px solid var(--primary); display: flex; align-items: center; gap: 14px; animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; transition: opacity 0.4s ease, transform 0.4s ease; font-weight: 500; font-size: 14px;}
-        .toast-success { border-left-color: #10b981; } .toast-error { border-left-color: #ef4444; }
-        @keyframes slideIn { from { transform: translateX(120%) scale(0.9); opacity: 0; } to { transform: translateX(0) scale(1); opacity: 1; } }
-
-        /* Mobile Adjustments */
-        @media (max-width: 480px) {
-            .login-box { padding: 32px 24px; }
-            #notification-container { top: 16px; right: 16px; left: 16px; width: auto; max-width: none; }
-        }
+        button.btn-login { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; margin-top: 8px;}
+        
+        /* THEME TOGGLE BUTTON - LOGIN SCREEN */
+        .theme-toggle-icon { position: absolute; top: 20px; right: 20px; background: transparent; border: none; font-size: 20px; cursor: pointer; opacity: 0.7; transition: 0.3s; }
+        .theme-toggle-icon:hover { opacity: 1; transform: scale(1.1); }
     </style>
 </head>
 <body>
-    <div id="notification-container"></div>
-    <div class="login-wrapper">
-        <div class="login-box">
-            <div class="logo">GrantSys.edu</div>
-            <p class="subtitle">Secure Research Management Portal</p>
-            <div class="input-group">
-                <label>Email Address</label>
-                <input type="email" id="email" placeholder="Enter your academic email">
-            </div>
-            <div class="input-group">
-                <label>Password</label>
-                <input type="password" id="password" placeholder="••••••••">
-            </div>
-            <button id="loginBtn" onclick="login()">Authenticate</button>
+    <div class="login-box">
+        <!-- Button to execute theme change logic -->
+        <button class="theme-toggle-icon" onclick="toggleTheme()" title="Toggle Theme">🌗</button>
+        
+        <div style="font-size: 28px; font-weight: 800; color: var(--primary); margin-bottom: 8px;">GrantSys.edu</div>
+        <p style="color: var(--text-muted); margin-bottom: 32px; font-size: 14px;">Secure Research Management Portal</p>
+        
+        <!-- Form Inputs -->
+        <div class="input-group">
+            <label>Email Address</label>
+            <input type="email" id="email" placeholder="Enter your academic email">
         </div>
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="••••••••">
+        </div>
+        
+        <button class="btn-login" id="loginBtn" onclick="login()">Authenticate</button>
     </div>
 
     <script>
+        // Clears any leftover session memory when user arrives at login screen
         localStorage.clear(); 
-        function showNotification(msg, type = 'info') {
-            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
-            const c = document.getElementById('notification-container');
-            const t = document.createElement('div'); t.className = `toast toast-${type}`;
-            t.innerHTML = `<span>${icons[type] || '🔔'}</span> <span>${msg}</span>`; 
-            c.appendChild(t);
-            setTimeout(() => { t.style.transform = 'translateX(120%) scale(0.9)'; t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 3000);
+
+        /* THEME CONTROLLER */
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
         }
 
+        /* LOGIN SIMULATION: Sends credentials to the backend. 
+           If successful, stores the Role and Email in LocalStorage for the Dashboard to use. */
         async function login() {
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
-            const btn = document.getElementById("loginBtn");
-            
-            if (!email || !password) return showNotification("Please complete all required fields.", "error");
+            if (!email || !password) return alert("Please fill fields.");
 
-            btn.classList.add("loading");
             try {
+                // Mockup of a real fetch request
                 const res = await fetch("/login", {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email, password })
@@ -98,16 +99,9 @@
                 if (data.success) {
                     localStorage.setItem("role", data.role);
                     localStorage.setItem("email", email); 
-                    showNotification("Authentication successful. Securing session...", "success");
-                    setTimeout(() => window.location.href = "/dashboard.html", 1200);
-                } else { 
-                    showNotification("Invalid credentials. Please verify your access.", "error"); 
-                    btn.classList.remove("loading");
-                }
-            } catch(e) {
-                showNotification("Network error. Server unreachable.", "error");
-                btn.classList.remove("loading");
-            }
+                    window.location.href = "/dashboard.html"; // Redirects to main app
+                } else { alert("Invalid credentials."); }
+            } catch(e) { console.error("Error communicating with server."); }
         }
     </script>
 </body>
