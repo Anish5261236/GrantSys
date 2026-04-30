@@ -270,7 +270,6 @@
             </div>
         </div>
     </main>
-
 <script>
     /* THEME TOGGLE LOGIC: Switches the data attribute and saves preference in browser storage */
     function toggleTheme() {
@@ -362,6 +361,22 @@
         }
     }
 
+    /* FETCH USERS: Populates the Manage Users table for Admins */
+    async function loadUsers() {
+        try {
+            const res = await fetch("/users");
+            const users = await res.json();
+            const tbody = document.getElementById("usersBody");
+            tbody.innerHTML = "";
+            users.forEach(u => {
+                const roleClass = `role-${u.role}`;
+                tbody.innerHTML += `<tr><td style="font-weight: 600;">${u.email}</td><td><span class="badge ${roleClass}">${u.role}</span></td><td><span style="color: #10b981; font-weight: 700; font-size:13px;">● Active Session</span></td></tr>`;
+            });
+        } catch (err) {
+            document.getElementById("usersBody").innerHTML = `<tr><td colspan="3">Failed to load users. Backend may be offline.</td></tr>`;
+        }
+    }
+
     /* UPDATES TOP METRICS: Calculates Approved/Rejected/Pending totals */
     function updateStatCards() {
         const total = allProposals.length;
@@ -409,7 +424,7 @@
             tBody.innerHTML += `<tr>
                 <td style="font-weight: 600;">${p.title}</td><td>${p.domain}</td>
                 <td style="color:var(--primary); font-weight:700;">$${p.budget}</td>
-                <td>${p.deadline}</td>
+                <td>${new Date(p.deadline).toLocaleDateString() || 'N/A'}</td>
                 <td><span class="badge status-${p.status}">${p.status}</span></td>
                 <td>${actionBtn}</td>
             </tr>`;
@@ -422,11 +437,49 @@
 
     function changePage(dir) { currentPage += dir; applyFilters(); }
 
-    /* CHART GENERATOR: Creates the visualizations using Chart.js. Responsive to dark/light mode context. */
+    /* ANIMATION UTILITY: Animates numbers counting up */
+    function animateValue(obj, start, end, duration) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            obj.innerHTML = Math.floor(progress * (end - start) + start);
+            if (progress < 1) window.requestAnimationFrame(step);
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    /* CHART GENERATOR: Creates all three visualizations using Chart.js. Responsive to dark/light mode context. */
     function generateReports() {
-        if (!allProposals.length) return;
+        if (!allProposals || allProposals.length === 0) return;
         
-        // Use a variable for grid lines that reacts to the theme
+        // Calculate Top Analytics Stats
+        const total = allProposals.length;
+        const approved = allProposals.filter(p => p.status === 'Approved').length;
+        const rate = total > 0 ? ((approved / total) * 100).toFixed(1) : 0;
+        
+        const domainCounts = {};
+        allProposals.forEach(p => { if (p.domain) domainCounts[p.domain] = (domainCounts[p.domain] || 0) + 1; });
+        let topDomain = "N/A"; let maxCount = 0;
+        for (const [dom, count] of Object.entries(domainCounts)) { if (count > maxCount) { maxCount = count; topDomain = dom; } }
+
+        document.getElementById("analytics-stats-container").innerHTML = `
+            <div class="stat-card"><span>Total Analyzed</span><h2 id="a-tot">0</h2></div>
+            <div class="stat-card"><span>Approval Rate</span><h2 style="color: #10b981;">${rate}%</h2></div>
+            <div class="stat-card"><span>Top Domain</span><h2 style="color: var(--primary); font-size: 22px;">${topDomain}</h2></div>
+        `;
+        animateValue(document.getElementById("a-tot"), 0, total, 1000);
+
+        // Map Data for Charts
+        const monthlyData = new Array(12).fill(0);
+        const approvedMonthly = new Array(12).fill(0);
+        allProposals.forEach(p => {
+            const month = (p.createdAt ? new Date(p.createdAt) : new Date()).getMonth();
+            monthlyData[month]++;
+            if(p.status === 'Approved') approvedMonthly[month]++;
+        });
+
+        // Theme-Aware Chart Styling
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const gridColor = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
         const textColor = isDark ? "#94a3b8" : "#64748b";
@@ -434,13 +487,29 @@
         Chart.defaults.color = textColor;
         Chart.defaults.font.family = "'Inter', sans-serif";
 
+        // 1. Monthly Submissions Bar Chart
         if (barChart) barChart.destroy();
         barChart = new Chart(document.getElementById('monthlyBarChart').getContext('2d'), {
             type: 'bar',
-            data: { labels: ["Jan", "Feb", "Mar"], datasets: [{ label: 'Proposals', data: [5, 10, 15], backgroundColor: '#6366f1' }] },
-            options: { scales: { x: { grid: { color: gridColor } }, y: { grid: { color: gridColor } } } }
+            data: { labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], datasets: [{ label: 'Proposals', data: monthlyData, backgroundColor: 'rgba(99, 102, 241, 0.6)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 8, hoverBackgroundColor: '#4f46e5' }] },
+            options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1500, easing: 'easeOutQuart' }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: gridColor } }, x: { grid: { color: gridColor } } } }
         });
-        // Logic abridged for comment brevity, normally full chart rendering occurs here.
+
+        // 2. Approval Trends Line Chart
+        if (lineChart) lineChart.destroy();
+        lineChart = new Chart(document.getElementById('trendLineChart').getContext('2d'), {
+            type: 'line',
+            data: { labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], datasets: [{ label: 'Approved', data: approvedMonthly, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', borderWidth: 4, tension: 0.4, fill: true, pointBackgroundColor: '#ffffff', pointBorderColor: '#10b981', pointBorderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1500, easing: 'easeOutQuart' }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: gridColor } }, x: { grid: { color: gridColor } } } }
+        });
+
+        // 3. Domain Distribution Pie Chart
+        if (pieChart) pieChart.destroy();
+        pieChart = new Chart(document.getElementById('domainPieChart').getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: Object.keys(domainCounts), datasets: [{ data: Object.values(domainCounts), backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'], borderWidth: 0, hoverOffset: 8 }] },
+            options: { responsive: true, maintainAspectRatio: false, animation: { animateScale: true, animateRotate: true, duration: 1500 }, cutout: '75%', plugins: { legend: { position: 'right' } } }
+        });
     }
 
     function logout() { localStorage.clear(); window.location.href = "/"; }
