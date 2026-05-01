@@ -41,9 +41,10 @@
         .input-row { display: flex; gap: 16px; }
         .input-item { flex: 1; }
 
-        /* DRAG AND DROP ZONE UI */
-        .drop-zone { border: 2px dashed var(--glass-border); border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; background: var(--input-bg); margin-bottom: 32px;}
-        .drop-zone.dragover { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); }
+        /* UPLOAD ZONE UI */
+        .drop-zone { border: 2px dashed var(--glass-border); border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; background: var(--input-bg); margin-bottom: 32px; user-select: none;}
+        .drop-zone:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); }
+        .drop-zone.dragover { border-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
         
         .btn-submit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; }
     </style>
@@ -69,10 +70,10 @@
         <label>Executive Summary</label>
         <textarea id="description"></textarea>
 
-        <!-- Hidden input connected to visual drag and drop zone -->
+        <!-- Hidden input connected to visual upload zone (Now set to Double Click) -->
         <label>Upload Supporting Documents (PDF, PPT, PPTX)</label>
-        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('attachment').click()">
-            <p id="drop-text">Drag & Drop your file here</p>
+        <div class="drop-zone" id="drop-zone" ondblclick="document.getElementById('attachment').click()">
+            <p id="drop-text">Double-click here to select your file</p>
             <input type="file" id="attachment" accept="application/pdf, .ppt, .pptx, application/vnd.ms-powerpoint, application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden>
         </div>
 
@@ -87,9 +88,16 @@
             localStorage.setItem('theme', newTheme);
         }
 
-        /* DRAG & DROP LOGIC: Intercepts native browser file drops and assigns them to the hidden file input */
+        /* FILE SELECTION LOGIC */
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('attachment');
+
+        // Update the text when a file is selected via the popup window
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                document.getElementById('drop-text').innerText = `Selected: ${this.files[0].name}`;
+            }
+        });
 
         // Prevent browser from opening files in a new tab when dragged over
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -100,10 +108,12 @@
         ['dragenter', 'dragover'].forEach(eventName => dropZone.classList.add('dragover'));
         ['dragleave', 'drop'].forEach(eventName => dropZone.classList.remove('dragover'));
 
-        // Handle the actual drop
+        // Handle the actual drop (Optional backup logic if they still drag and drop)
         dropZone.addEventListener('drop', e => {
             fileInput.files = e.dataTransfer.files;
-            document.getElementById('drop-text').innerText = `Selected: ${fileInput.files[0].name}`;
+            if(fileInput.files.length > 0) {
+                document.getElementById('drop-text').innerText = `Selected: ${fileInput.files[0].name}`;
+            }
         });
 
         /* SUBMISSION HANDLER: Compiles text and files into a FormData object suitable for API transport */
@@ -130,7 +140,7 @@
                 if (result.success) {
                     window.location.href = "/dashboard.html";
                 } else {
-                    // This will now show you exactly WHY the upload failed!
+                    // This will show exactly WHY the upload failed!
                     alert("Upload Failed: " + result.error); 
                 }
             } catch (error) {
