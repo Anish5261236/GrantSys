@@ -187,7 +187,8 @@
             <div class="content-section">
                 <h3 style="color: var(--text-main); font-size: 20px; font-weight: 700; margin-bottom: 24px;" id="table-title">Database Overview</h3>
                 <div class="controls-bar">
-                    <input type="text" id="searchBox" class="control-input search-box" placeholder="🔍 Search title or domain..." oninput="applyFilters()">
+                    <!-- FIXED: Added autocomplete="off" here to prevent the browser from filling in email addresses -->
+                    <input type="text" id="searchBox" class="control-input search-box" placeholder="🔍 Search title or domain..." oninput="applyFilters()" autocomplete="off">
                     <select id="statusFilter" class="control-input" onchange="applyFilters()">
                         <option value="All">All Statuses</option>
                         <option value="Pending">Pending</option>
@@ -238,11 +239,11 @@
                 <div id="add-user-form">
                     <div>
                         <label class="control-label" style="display:block; font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Email Address</label>
-                        <input type="email" id="new-user-email" class="control-input" style="width:100%" placeholder="academic@email.edu">
+                        <input type="email" id="new-user-email" class="control-input" style="width:100%" placeholder="academic@email.edu" autocomplete="off">
                     </div>
                     <div>
                         <label class="control-label" style="display:block; font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Password</label>
-                        <input type="password" id="new-user-password" class="control-input" style="width:100%" placeholder="••••••••">
+                        <input type="password" id="new-user-password" class="control-input" style="width:100%" placeholder="••••••••" autocomplete="off">
                     </div>
                     <div>
                         <label class="control-label" style="display:block; font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">System Role</label>
@@ -507,7 +508,7 @@
         } catch (err) { console.error(err); }
     }
 
-    /* === NEW: EXPORT FUNDED PROJECTS (CSV) === */
+    /* === EXPORT FUNDED PROJECTS (CSV) === */
     function exportFundedReport() {
         // Find only approved projects
         const fundedProposals = allProposals.filter(p => p.status === 'Approved');
