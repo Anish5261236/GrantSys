@@ -134,6 +134,13 @@
         .page-btns button { background: var(--card-bg); border: 1px solid var(--glass-border); padding: 10px 18px; border-radius: 10px; cursor: pointer; font-weight: 600; color: var(--text-main); transition: 0.2s; margin-left: 8px;}
         .page-btns button:hover:not(:disabled) { background: var(--primary); color: white; border-color: var(--primary); }
         .chart-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; }
+
+        /* USER MANAGEMENT STYLES */
+        #add-user-form { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 16px; margin-bottom: 32px; padding: 24px; background: rgba(99, 102, 241, 0.04); border-radius: 16px; border: 1px solid var(--glass-border); align-items: end;}
+        .btn-add { background: var(--primary); color: white; padding: 12px 24px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; font-size: 14px; height: 44px; transition: 0.2s;}
+        .btn-add:hover { background: var(--primary-hover); transform: translateY(-2px);}
+        .btn-delete { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s;}
+        .btn-delete:hover { background: #dc2626; transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -196,7 +203,13 @@
 
         <!-- DASHBOARD TAB: Contains statistics and the main data table -->
         <div id="view-dashboard" class="view-section">
-            <div class="stats-grid" id="stats-container"></div>
+            <div class="stats-grid" id="stats-container">
+                <!-- SKELETON CARDS SHOWN WHILE LOADING -->
+                <div class="stat-card"><span class="skeleton sk-text"></span><h2 class="skeleton sk-title"></h2></div>
+                <div class="stat-card"><span class="skeleton sk-text"></span><h2 class="skeleton sk-title"></h2></div>
+                <div class="stat-card"><span class="skeleton sk-text"></span><h2 class="skeleton sk-title"></h2></div>
+                <div class="stat-card"><span class="skeleton sk-text"></span><h2 class="skeleton sk-title"></h2></div>
+            </div>
 
             <div class="content-section">
                 <h3 style="color: var(--text-main); font-size: 20px; font-weight: 700; margin-bottom: 24px;" id="table-title">Database Overview</h3>
@@ -212,13 +225,28 @@
                         <option value="latest">Sort: Latest First</option>
                         <option value="oldest">Sort: Oldest First</option>
                         <option value="budgetHigh">Sort: Highest Budget</option>
+                        <option value="deadline">Sort: Deadline</option>
                     </select>
                 </div>
                 
                 <div class="table-responsive">
                     <table id="proposalTable">
-                        <thead><tr><th>Project Title</th><th>Domain</th><th>Budget</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead>
-                        <tbody id="tableBody"></tbody>
+                        <thead>
+                            <tr>
+                                <th>Project Title</th>
+                                <th>Domain</th>
+                                <th>Budget</th>
+                                <th>Submitted by</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Skeleton Rows while data is fetching -->
+                            <tr><td colspan="6"><div class="skeleton sk-text" style="width:100%"></div></td></tr>
+                            <tr><td colspan="6"><div class="skeleton sk-text" style="width:100%"></div></td></tr>
+                            <tr><td colspan="6"><div class="skeleton sk-text" style="width:100%"></div></td></tr>
+                        </tbody>
                     </table>
                 </div>
                 
@@ -236,9 +264,31 @@
         <div id="view-users" class="view-section">
             <div class="content-section">
                 <h3 style="color: var(--text-main); margin-bottom: 24px; font-size: 20px;">System Users Registry</h3>
+                
+                <!-- ADD USER FORM -->
+                <div id="add-user-form">
+                    <div>
+                        <label class="control-label" style="display:block; font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Email Address</label>
+                        <input type="email" id="new-user-email" class="control-input" style="width:100%" placeholder="academic@email.edu">
+                    </div>
+                    <div>
+                        <label class="control-label" style="display:block; font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Password</label>
+                        <input type="password" id="new-user-password" class="control-input" style="width:100%" placeholder="••••••••">
+                    </div>
+                    <div>
+                        <label class="control-label" style="display:block; font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">System Role</label>
+                        <select id="new-user-role" class="control-input" style="width:100%">
+                            <option value="Faculty">Faculty (Submitter)</option>
+                            <option value="Reviewer">Reviewer (Committee)</option>
+                            <option value="Admin">Admin (Oversight)</option>
+                        </select>
+                    </div>
+                    <button class="btn-add" onclick="addUser()">+ Add User</button>
+                </div>
+
                 <div class="table-responsive">
                     <table id="usersTable">
-                        <thead><tr><th>Email Address</th><th>System Role</th><th>Status</th></tr></thead>
+                        <thead><tr><th>Email Address</th><th>System Role</th><th>Actions</th></tr></thead>
                         <tbody id="usersBody"></tbody>
                     </table>
                 </div>
@@ -295,7 +345,12 @@
     /* AUTHENTICATION CHECK: Protects the route and verifies role */
     const role = localStorage.getItem("role");
     const userEmail = localStorage.getItem("email");
-    if(!role) window.location.href = "/";
+    
+    if(!role) {
+        console.log("No role found, redirecting to login.");
+        window.location.href = "/";
+    }
+    
     document.getElementById("user-role-label").innerText = `Authenticated as ${role}`;
 
     /* DYNAMIC PROFILE: Greets the user based on time of day and formats their name */
@@ -315,7 +370,11 @@
     initializeUserProfile();
 
     /* ROLE-BASED ACCESS CONTROL (RBAC): Hides/Shows menu items depending on privileges */
-    ["menu-submit", "menu-proposals", "menu-reviews", "menu-users", "nav-dash", "menu-reports"].forEach(id => document.getElementById(id).style.display = "none");
+    const menuIds = ["menu-submit", "menu-proposals", "menu-reviews", "menu-users", "nav-dash", "menu-reports"];
+    menuIds.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.style.display = "none";
+    });
 
     if (role === "Faculty") {
         document.getElementById("menu-submit").style.display = "flex";
@@ -331,60 +390,87 @@
     }
 
     /* TAB NAVIGATION: Handles switching between dashboard, users, and reports views */
-    function openDashboard() { switchTab('dashboard'); document.getElementById("statusFilter").value = "All"; applyFilters(); }
-    function openReviewQueue() { switchTab('dashboard'); document.getElementById("statusFilter").value = "Pending"; applyFilters(); }
+    function openDashboard() { 
+        switchTab('dashboard'); 
+        document.getElementById("statusFilter").value = "All"; 
+        applyFilters(); 
+    }
+    function openReviewQueue() { 
+        switchTab('dashboard'); 
+        document.getElementById("statusFilter").value = "Pending"; 
+        applyFilters(); 
+    }
 
     function switchTab(tab) {
         document.querySelectorAll('.view-section').forEach(el => el.style.display = 'none');
-        document.getElementById(`view-${tab}`).style.display = 'block';
+        const targetView = document.getElementById(`view-${tab}`);
+        if(targetView) targetView.style.display = 'block';
+        
         document.querySelectorAll('nav li').forEach(li => li.classList.remove('active'));
-        if(tab === 'users') { document.getElementById('menu-users').classList.add('active'); loadUsers(); }
-        if(tab === 'reports') { document.getElementById('menu-reports').classList.add('active'); generateReports(); }
+        
+        if(tab === 'users') { 
+            document.getElementById('menu-users').classList.add('active'); 
+            loadUsers(); 
+        } else if(tab === 'reports') { 
+            document.getElementById('menu-reports').classList.add('active'); 
+            generateReports(); 
+        } else if(tab === 'dashboard') {
+            document.getElementById('nav-dash').classList.add('active');
+        }
     }
 
     // State Variables for Pagination & Data
     let allProposals = [];
-    let currentPage = 1; const itemsPerPage = 10;
+    let currentPage = 1; 
+    const itemsPerPage = 10;
     let barChart, pieChart, lineChart;
 
-    /* FETCH PROPOSALS: Retrieves data from API. Simulates data locally if offline. */
+    /* FETCH PROPOSALS: Retrieves data from API. */
     async function loadProposals() {
+        console.log("Attempting to fetch proposals...");
         try {
             const res = await fetch("/proposals");
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
             let data = await res.json();
-            if (role === "Faculty") data = data.filter(p => p.submittedBy === userEmail);
+            console.log("Proposals successfully fetched:", data);
+            
+            if (data.length === 0) {
+                console.warn("API works, but database has 0 proposals.");
+                const tBody = document.getElementById("tableBody");
+                if (tBody) tBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 48px; color: var(--text-muted);'>No proposals found. Database is empty.</td></tr>";
+                updateStatCards(data); // Will show 0 for all stats
+                return; 
+            }
+            
+            if (role === "Faculty") {
+                console.log(`Filtering proposals for Faculty user: ${userEmail}`);
+                data = data.filter(p => p.submittedBy === userEmail);
+                console.log("Filtered data:", data);
+            }
+            
             allProposals = data; 
-            updateStatCards();
+            updateStatCards(allProposals);
             applyFilters(); 
         } catch (err) {
-            console.error("API error, ensure backend is running.");
-        }
-    }
-
-    /* FETCH USERS: Populates the Manage Users table for Admins */
-    async function loadUsers() {
-        try {
-            const res = await fetch("/users");
-            const users = await res.json();
-            const tbody = document.getElementById("usersBody");
-            tbody.innerHTML = "";
-            users.forEach(u => {
-                const roleClass = `role-${u.role}`;
-                tbody.innerHTML += `<tr><td style="font-weight: 600;">${u.email}</td><td><span class="badge ${roleClass}">${u.role}</span></td><td><span style="color: #10b981; font-weight: 700; font-size:13px;">● Active Session</span></td></tr>`;
-            });
-        } catch (err) {
-            document.getElementById("usersBody").innerHTML = `<tr><td colspan="3">Failed to load users. Backend may be offline.</td></tr>`;
+            console.error("Critical API error, ensure backend is running and connected.", err);
+            const tBody = document.getElementById("tableBody");
+            if (tBody) tBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 48px; color: #ef4444;'>Failed to connect to the server. Please ensure the backend is running.</td></tr>";
         }
     }
 
     /* UPDATES TOP METRICS: Calculates Approved/Rejected/Pending totals */
-    function updateStatCards() {
-        const total = allProposals.length;
-        const app = allProposals.filter(p => p.status === 'Approved').length;
-        const rej = allProposals.filter(p => p.status === 'Rejected').length;
-        const pen = allProposals.filter(p => p.status === 'Pending').length;
+    function updateStatCards(data) {
+        const container = document.getElementById("stats-container");
+        if (!container) return;
         
-        document.getElementById("stats-container").innerHTML = `
+        const total = data.length;
+        const app = data.filter(p => p.status === 'Approved').length;
+        const rej = data.filter(p => p.status === 'Rejected').length;
+        const pen = data.filter(p => p.status === 'Pending').length;
+        
+        container.innerHTML = `
             <div class="stat-card"><span>Total Submissions</span><h2>${total}</h2></div>
             <div class="stat-card"><span>Approved</span><h2 style="color: #10b981;">${app}</h2></div>
             <div class="stat-card"><span>Rejected</span><h2 style="color: #ef4444;">${rej}</h2></div>
@@ -395,9 +481,15 @@
     /* FILTER ENGINE: Handles the search bar, status dropdown, and sorting */
     function applyFilters() {
         let filtered = [...allProposals];
-        const search = document.getElementById("searchBox").value.toLowerCase();
-        const status = document.getElementById("statusFilter").value;
-        const sort = document.getElementById("sortFilter").value;
+        const searchBox = document.getElementById("searchBox");
+        const statusFilter = document.getElementById("statusFilter");
+        const sortFilter = document.getElementById("sortFilter");
+        
+        if(!searchBox || !statusFilter || !sortFilter) return;
+
+        const search = searchBox.value.toLowerCase();
+        const status = statusFilter.value;
+        const sort = sortFilter.value;
 
         if (search) filtered = filtered.filter(p => p.title.toLowerCase().includes(search) || p.domain.toLowerCase().includes(search));
         if (status !== "All") filtered = filtered.filter(p => p.status === status);
@@ -405,37 +497,136 @@
         if (sort === "latest") filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         if (sort === "oldest") filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         if (sort === "budgetHigh") filtered.sort((a, b) => (b.budget || 0) - (a.budget || 0));
+        if (sort === "deadline") filtered.sort((a, b) => new Date(a.deadline) - new Date(b.deadline)); // Sort by earliest deadline
 
         renderTable(filtered);
     }
 
-    /* RENDER TABLE: Populates the HTML table with filtered data and builds dynamic action buttons based on user role */
+    /* RENDER TABLE: Populates the HTML table with filtered data */
     function renderTable(data) {
+        const tBody = document.getElementById("tableBody");
+        const pageInfo = document.getElementById("page-info");
+        const btnPrev = document.getElementById("btn-prev");
+        const btnNext = document.getElementById("btn-next");
+        
+        if(!tBody || !pageInfo || !btnPrev || !btnNext) return;
+
+        tBody.innerHTML = "";
+        
+        if(data.length === 0) {
+            tBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 48px; color: var(--text-muted);'>No matching proposals found for current filters.</td></tr>";
+            pageInfo.innerText = "Showing 0 of 0";
+            btnPrev.disabled = true;
+            btnNext.disabled = true;
+            return;
+        }
+        
         const totalPages = Math.ceil(data.length / itemsPerPage) || 1;
         if (currentPage > totalPages) currentPage = totalPages;
         const start = (currentPage - 1) * itemsPerPage;
         const paginated = data.slice(start, start + itemsPerPage);
         
-        const tBody = document.getElementById("tableBody");
-        tBody.innerHTML = "";
-        
         paginated.forEach(p => {
+            const dateStr = p.deadline ? new Date(p.deadline).toLocaleDateString() : 'N/A';
             let actionBtn = `<button class="btn-action" onclick="location.href='/review.html?id=${p._id}'">View Details</button>`;
             tBody.innerHTML += `<tr>
-                <td style="font-weight: 600;">${p.title}</td><td>${p.domain}</td>
-                <td style="color:var(--primary); font-weight:700;">$${p.budget}</td>
-                <td>${new Date(p.deadline).toLocaleDateString() || 'N/A'}</td>
+                <td style="font-weight: 600; white-space: normal;">${p.title}</td>
+                <td>${p.domain}</td>
+                <td style="color:var(--primary); font-weight:700;">$${p.budget.toLocaleString()}</td>
+                <td>${p.submittedBy}</td>
                 <td><span class="badge status-${p.status}">${p.status}</span></td>
                 <td>${actionBtn}</td>
             </tr>`;
         });
         
-        document.getElementById("page-info").innerText = `Page ${currentPage} of ${totalPages}`;
-        document.getElementById("btn-prev").disabled = currentPage === 1;
-        document.getElementById("btn-next").disabled = currentPage === totalPages;
+        pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+        btnPrev.disabled = currentPage === 1;
+        btnNext.disabled = currentPage === totalPages;
     }
 
     function changePage(dir) { currentPage += dir; applyFilters(); }
+
+    // --- USER MANAGEMENT FUNCTIONS (Admin Only) ---
+
+    /* FETCH USERS: Populates the Manage Users table for Admins */
+    async function loadUsers() {
+        const tbody = document.getElementById("usersBody");
+        if(!tbody) return;
+        
+        // FIXED QUOTATION MARKS HERE
+        tbody.innerHTML = `<tr><td colspan='3'><div class='skeleton sk-text' style='width:100%'></div></td></tr>`;
+
+        try {
+            const res = await fetch("/users");
+            const users = await res.json();
+            
+            tbody.innerHTML = "";
+            users.forEach(u => {
+                const roleClass = `role-${u.role}`;
+                tbody.innerHTML += `<tr>
+                    <td style="font-weight: 600;">${u.email}</td>
+                    <td><span class="badge ${roleClass}">${u.role}</span></td>
+                    <td><button class="btn-delete" onclick="deleteUser('${u._id}')">Delete</button></td>
+                </tr>`;
+            });
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="3" style='color:#ef4444; text-align:center;'>Failed to load users. Backend may be offline.</td></tr>`;
+        }
+    }
+
+    /* ADD NEW USER */
+    async function addUser() {
+        const emailInput = document.getElementById("new-user-email");
+        const passwordInput = document.getElementById("new-user-password");
+        const roleInput = document.getElementById("new-user-role");
+        
+        if(!emailInput || !passwordInput || !roleInput) return;
+
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        const role = roleInput.value;
+
+        if (!email || !password) return alert("Please fill in Email and Password.");
+
+        try {
+            const res = await fetch("/users", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password, role })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("User added successfully.");
+                emailInput.value = "";
+                passwordInput.value = "";
+                loadUsers(); // Refresh the table
+            } else {
+                alert("Failed to add user: " + data.error);
+            }
+        } catch (err) {
+            console.error("Error adding user:", err);
+        }
+    }
+
+    /* DELETE USER */
+    async function deleteUser(userId) {
+        if (!confirm("Are you sure you want to delete this user?")) return;
+
+        try {
+            const res = await fetch(`/users/${userId}`, { method: "DELETE" });
+            const data = await res.json();
+            if (data.success) {
+                alert("User deleted successfully.");
+                loadUsers(); // Refresh the table
+            } else {
+                alert("Failed to delete user: " + data.error);
+            }
+        } catch (err) {
+            console.error("Error deleting user:", err);
+        }
+    }
+
+    // --- ANALYTICS FUNCTIONS ---
 
     /* ANIMATION UTILITY: Animates numbers counting up */
     function animateValue(obj, start, end, duration) {
@@ -449,9 +640,10 @@
         window.requestAnimationFrame(step);
     }
 
-    /* CHART GENERATOR: Creates all three visualizations using Chart.js. Responsive to dark/light mode context. */
+    /* CHART GENERATOR: Creates all three visualizations using Chart.js. */
     function generateReports() {
-        if (!allProposals || allProposals.length === 0) return;
+        const analyticsContainer = document.getElementById("analytics-stats-container");
+        if (!analyticsContainer || !allProposals || allProposals.length === 0) return;
         
         // Calculate Top Analytics Stats
         const total = allProposals.length;
@@ -463,7 +655,7 @@
         let topDomain = "N/A"; let maxCount = 0;
         for (const [dom, count] of Object.entries(domainCounts)) { if (count > maxCount) { maxCount = count; topDomain = dom; } }
 
-        document.getElementById("analytics-stats-container").innerHTML = `
+        analyticsContainer.innerHTML = `
             <div class="stat-card"><span>Total Analyzed</span><h2 id="a-tot">0</h2></div>
             <div class="stat-card"><span>Approval Rate</span><h2 style="color: #10b981;">${rate}%</h2></div>
             <div class="stat-card"><span>Top Domain</span><h2 style="color: var(--primary); font-size: 22px;">${topDomain}</h2></div>
@@ -488,31 +680,45 @@
         Chart.defaults.font.family = "'Inter', sans-serif";
 
         // 1. Monthly Submissions Bar Chart
-        if (barChart) barChart.destroy();
-        barChart = new Chart(document.getElementById('monthlyBarChart').getContext('2d'), {
-            type: 'bar',
-            data: { labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], datasets: [{ label: 'Proposals', data: monthlyData, backgroundColor: 'rgba(99, 102, 241, 0.6)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 8, hoverBackgroundColor: '#4f46e5' }] },
-            options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1500, easing: 'easeOutQuart' }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: gridColor } }, x: { grid: { color: gridColor } } } }
-        });
+        const barCtx = document.getElementById('monthlyBarChart');
+        if (barCtx) {
+            if (barChart) barChart.destroy();
+            barChart = new Chart(barCtx.getContext('2d'), {
+                type: 'bar',
+                data: { labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], datasets: [{ label: 'Proposals', data: monthlyData, backgroundColor: 'rgba(99, 102, 241, 0.6)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 8, hoverBackgroundColor: '#4f46e5' }] },
+                options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1500, easing: 'easeOutQuart' }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: gridColor } }, x: { grid: { color: gridColor } } } }
+            });
+        }
 
         // 2. Approval Trends Line Chart
-        if (lineChart) lineChart.destroy();
-        lineChart = new Chart(document.getElementById('trendLineChart').getContext('2d'), {
-            type: 'line',
-            data: { labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], datasets: [{ label: 'Approved', data: approvedMonthly, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', borderWidth: 4, tension: 0.4, fill: true, pointBackgroundColor: '#ffffff', pointBorderColor: '#10b981', pointBorderWidth: 2 }] },
-            options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1500, easing: 'easeOutQuart' }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: gridColor } }, x: { grid: { color: gridColor } } } }
-        });
+        const lineCtx = document.getElementById('trendLineChart');
+        if (lineCtx) {
+            if (lineChart) lineChart.destroy();
+            lineChart = new Chart(lineCtx.getContext('2d'), {
+                type: 'line',
+                data: { labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], datasets: [{ label: 'Approved', data: approvedMonthly, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', borderWidth: 4, tension: 0.4, fill: true, pointBackgroundColor: '#ffffff', pointBorderColor: '#10b981', pointBorderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1500, easing: 'easeOutQuart' }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: gridColor } }, x: { grid: { color: gridColor } } } }
+            });
+        }
 
         // 3. Domain Distribution Pie Chart
-        if (pieChart) pieChart.destroy();
-        pieChart = new Chart(document.getElementById('domainPieChart').getContext('2d'), {
-            type: 'doughnut',
-            data: { labels: Object.keys(domainCounts), datasets: [{ data: Object.values(domainCounts), backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'], borderWidth: 0, hoverOffset: 8 }] },
-            options: { responsive: true, maintainAspectRatio: false, animation: { animateScale: true, animateRotate: true, duration: 1500 }, cutout: '75%', plugins: { legend: { position: 'right' } } }
-        });
+        const pieCtx = document.getElementById('domainPieChart');
+        if (pieCtx) {
+            if (pieChart) pieChart.destroy();
+            pieChart = new Chart(pieCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: Object.keys(domainCounts), datasets: [{ data: Object.values(domainCounts), backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'], borderWidth: 0, hoverOffset: 8 }] },
+                options: { responsive: true, maintainAspectRatio: false, animation: { animateScale: true, animateRotate: true, duration: 1500 }, cutout: '75%', plugins: { legend: { position: 'right' } } }
+            });
+        }
     }
 
-    function logout() { localStorage.clear(); window.location.href = "/"; }
+    function logout() { 
+        localStorage.clear(); 
+        window.location.href = "/"; 
+    }
+    
+    // Initial data load on page ready
     loadProposals();
 </script>
 </body>

@@ -46,8 +46,12 @@ const upload = multer({
 });
 
 // -------------------- DATABASE CONNECTION --------------------
-mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/grantsys") // Fallback URI added for local testing
-.then(() => console.log("MongoDB Connected"))
+// Fallback URI is provided for local testing without an environment variable
+mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/grantsys") 
+.then(async () => {
+    console.log("MongoDB Connected");
+    await initializeData(); // Generate initial data for users and proposals
+})
 .catch(err => console.log("MongoDB Error:", err));
 
 // -------------------- SCHEMA DEFINITIONS --------------------
@@ -56,7 +60,7 @@ const proposalSchema = new mongoose.Schema({
     description: String,
     domain: String,
     budget: Number,
-    deadline: String, 
+    deadline: Date, 
     submittedBy: String,
     status: { type: String, default: "Pending" },
     comment: { type: String, default: "" },
@@ -73,11 +77,46 @@ const proposalSchema = new mongoose.Schema({
 
 const Proposal = mongoose.model("Proposal", proposalSchema);
 
-const User = mongoose.model("User", {
-    email: String,
-    password: String,
-    role: String
+const userSchema = new mongoose.Schema({
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role: { type: String, required: true, enum: ['Faculty', 'Reviewer', 'Admin'] }
 });
+
+const User = mongoose.model("User", userSchema);
+
+// -------------------- DATA INITIALIZATION --------------------
+async function initializeData() {
+    try {
+        const userCount = await User.countDocuments();
+        if (userCount === 0) {
+            console.log("Generating initial user data...");
+            await User.create([
+                { email: 'admin@grantsys.edu', password: '123', role: 'Admin' },
+                { email: 'faculty@grantsys.edu', password: '123', role: 'Faculty' },
+                { email: 'reviewer@grantsys.edu', password: '123', role: 'Reviewer' }
+            ]);
+        }
+
+        const proposalCount = await Proposal.countDocuments();
+        if (proposalCount === 0) {
+            console.log("Generating initial proposal data...");
+            const deadlines = [
+                new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
+                new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 2 weeks from now
+                new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago (expired)
+            ];
+            await Proposal.create([
+                { title: 'Quantum Computing Fundamentals', description: 'Basic research on qubit stability.', domain: 'Physics', budget: 15000, deadline: deadlines[0], submittedBy: 'faculty@grantsys.edu', status: 'Approved' },
+                { title: 'AI in Smart Agriculture', description: 'Improving crop yield using machine learning.', domain: 'Agriculture', budget: 25000, deadline: deadlines[1], submittedBy: 'faculty@grantsys.edu', status: 'Pending' },
+                { title: 'Sustainable Polymer Research', description: 'Developing biodegradable plastic alternatives.', domain: 'Chemistry', budget: 10000, deadline: deadlines[2], submittedBy: 'faculty@grantsys.edu', status: 'Rejected', comment: 'Proposed deadline is already in the past. Please revise and resubmit with a valid timeline.' }
+            ]);
+        }
+        console.log("Data initialization complete.");
+    } catch (err) {
+        console.error("Error initializing data:", err);
+    }
+}
 
 // -------------------- LOGIN API --------------------
 app.post("/login", async (req, res) => {
@@ -190,6 +229,27 @@ app.get("/users", async (req, res) => {
         res.json(users);
     } catch {
         res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Route to create a new user (Admin only)
+app.post("/users", async (req, res) => {
+    try {
+        const { email, password, role } = req.body;
+        await User.create({ email, password, role });
+        res.json({ success: true });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
+
+// Route to delete a user by ID (Admin only)
+app.delete("/users/:id", async (req, res) => {
+    try {
+        await User.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
     }
 });
 

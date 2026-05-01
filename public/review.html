@@ -38,11 +38,14 @@
         .field { background: var(--input-bg); padding: 20px 24px; border-radius: 16px; border: 1px solid var(--glass-border); }
         .field.full { grid-column: 1 / -1; }
         .field label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: block;}
+        .field p { font-weight: 500; font-size: 15px;}
         
-        /* ACTION AREA: Reviewers see this to approve/decline */
+        /* ACTION AREA */
+        label.feedback-label { display: block; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: var(--text-main); }
         textarea { width: 100%; border-radius: 16px; border: 1px solid var(--glass-border); padding: 20px; background: var(--input-bg); color: var(--text-main); outline: none; margin-bottom: 24px;}
         .btn-group { display: flex; gap: 16px; }
-        .btn { flex: 1; padding: 16px; border-radius: 14px; border: none; font-weight: 700; color: white; cursor: pointer; }
+        .btn { flex: 1; padding: 16px; border-radius: 14px; border: none; font-weight: 700; color: white; cursor: pointer; transition: 0.2s;}
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .btn-app { background: #10b981; } .btn-rej { background: #ef4444; }
     </style>
 </head>
@@ -54,14 +57,14 @@
             <button class="theme-btn" onclick="toggleTheme()" title="Toggle Theme">🌗</button>
         </div>
         
-        <h2>Proposal Details</h2>
+        <h2 style="margin-bottom: 32px; font-weight: 800;">Proposal Details</h2>
         
         <div class="grid-info" id="data-container">
             <!-- Data injected via Javascript below -->
         </div>
 
-        <div id="action-area" style="display: none;">
-            <label>Submit Committee Feedback</label>
+        <div id="action-area" style="display: none; padding-top: 24px; border-top: 1px solid var(--glass-border);">
+            <label class="feedback-label">Submit Committee Feedback</label>
             <textarea id="v-comment" placeholder="Provide detailed and actionable feedback..."></textarea>
             <div class="btn-group">
                 <button class="btn btn-app" onclick="updateStatus('Approved')">Approve Grant</button>
@@ -78,38 +81,53 @@
             localStorage.setItem('theme', newTheme);
         }
 
-        /* URL PARSING: Grabs the ID from the URL (e.g. review.html?id=123) to fetch the right data */
+        /* URL PARSING: Grabs the ID from the URL (e.g. review.html?id=123) */
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id');
         const role = localStorage.getItem("role");
 
         async function load() {
+            if(!id) return alert("Error: No proposal ID provided in URL.");
             try {
                 const res = await fetch(`/proposals/${id}`);
                 const p = await res.json();
                 
+                const deadlineStr = p.deadline ? new Date(p.deadline).toLocaleDateString() : 'N/A';
+                
                 // INJECTS DATA dynamically into the HTML containers
                 document.getElementById("data-container").innerHTML = `
-                    <div class="field full"><label>Project Title</label><p>${p.title}</p></div>
+                    <div class="field full"><label>Project Title</label><p style="font-size: 18px; font-weight: 700;">${p.title}</p></div>
                     <div class="field"><label>Domain</label><p>${p.domain}</p></div>
-                    <div class="field"><label>Budget</label><p>$${p.budget}</p></div>
+                    <div class="field"><label>Budget</label><p style="color: var(--primary); font-weight: 700;">$${p.budget.toLocaleString()}</p></div>
+                    <div class="field full"><label>Proposed Deadline</label><p>${deadlineStr}</p></div>
+                    <div class="field full"><label>Executive Summary</label><p style="white-space: pre-wrap; font-size: 14px; line-height: 1.6; color: var(--text-muted);">${p.description}</p></div>
+                    ${p.comment ? `<div class="field full"><label>Actionable Feedback</label><p style="color: #ef4444; font-weight:600;">${p.comment}</p></div>` : ''}
                 `;
 
-                // SHOW ACTIONS ONLY TO REVIEWERS/ADMINS
+                // SHOW ACTIONS ONLY TO REVIEWERS/ADMINS FOR PENDING PROPOSALS
                 if (role === "Reviewer" || role === "Admin") {
                     if (p.status === "Pending") document.getElementById("action-area").style.display = "block";
                 }
-            } catch (err) { console.error("Load error"); }
+            } catch (err) { console.error("Load error", err); }
         }
 
         /* STATUS UPDATE: Sends an HTTP PUT request to modify the backend database record */
         async function updateStatus(status) {
             const comment = document.getElementById("v-comment").value;
-            await fetch(`/proposals/${id}`, {
-                method: "PUT", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status, comment, role, email: localStorage.getItem("email") })
-            });
-            window.location.href="/dashboard.html";
+            if(!comment && status === "Rejected") return alert("Feedback is mandatory for rejected proposals.");
+            
+            try {
+                const res = await fetch(`/proposals/${id}`, {
+                    method: "PUT", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status, comment, role, email: localStorage.getItem("email") })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    window.location.href="/dashboard.html";
+                } else {
+                    alert("Failed to update status.");
+                }
+            } catch(err) { console.error("Status update error", err); }
         }
         
         load();

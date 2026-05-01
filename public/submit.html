@@ -42,9 +42,11 @@
         .input-item { flex: 1; }
 
         /* UPLOAD ZONE UI */
-        .drop-zone { border: 2px dashed var(--glass-border); border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; background: var(--input-bg); margin-bottom: 32px; user-select: none;}
+        .drop-zone { border: 2px dashed var(--glass-border); border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; background: var(--input-bg); margin-bottom: 8px; user-select: none;}
         .drop-zone:hover { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); }
         .drop-zone.dragover { border-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
+        
+        #undo-text { font-size: 13px; color: #ef4444; font-weight: 600; cursor: pointer; text-decoration: underline; margin-bottom: 32px; display: none;}
         
         .btn-submit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; }
     </style>
@@ -67,6 +69,9 @@
             <div class="input-item"><label>Budget ($)</label><input id="budget" type="number"></div>
         </div>
 
+        <label>Proposed Deadline (Required)</label>
+        <input type="date" id="deadline">
+
         <label>Executive Summary</label>
         <textarea id="description"></textarea>
 
@@ -76,6 +81,7 @@
             <p id="drop-text">Double-click here to select your file</p>
             <input type="file" id="attachment" accept="application/pdf, .ppt, .pptx, application/vnd.ms-powerpoint, application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden>
         </div>
+        <p id="undo-text" onclick="undoFile()">✕ Undo upload</p>
 
         <button class="btn-submit" onclick="submitProposal()">Initialize Secure Submission</button>
     </div>
@@ -91,13 +97,21 @@
         /* FILE SELECTION LOGIC */
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('attachment');
+        const undoText = document.getElementById('undo-text');
 
         // Update the text when a file is selected via the popup window
         fileInput.addEventListener('change', function() {
             if (this.files && this.files.length > 0) {
                 document.getElementById('drop-text').innerText = `Selected: ${this.files[0].name}`;
+                undoText.style.display = "block"; // Show the undo option
             }
         });
+
+        function undoFile() {
+            fileInput.value = ""; // Clear the file input
+            document.getElementById('drop-text').innerText = "Double-click here to select your file";
+            undoText.style.display = "none"; // Hide the undo option
+        }
 
         // Prevent browser from opening files in a new tab when dragged over
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -113,15 +127,22 @@
             fileInput.files = e.dataTransfer.files;
             if(fileInput.files.length > 0) {
                 document.getElementById('drop-text').innerText = `Selected: ${fileInput.files[0].name}`;
+                undoText.style.display = "block";
             }
         });
 
-        /* SUBMISSION HANDLER: Compiles text and files into a FormData object suitable for API transport */
+        /* SUBMISSION HANDLER */
         async function submitProposal() {
             const title = document.getElementById("title").value;
             const description = document.getElementById("description").value;
             const domain = document.getElementById("domain").value;
             const budget = document.getElementById("budget").value;
+            const deadline = document.getElementById("deadline").value;
+
+            // Simple validation
+            if (!title || !domain || !budget || !deadline) {
+                return alert("Please fill in all required fields (Title, Domain, Budget, Deadline).");
+            }
 
             // FormData is specifically required when sending files via fetch, unlike raw JSON
             const formData = new FormData();
@@ -129,6 +150,7 @@
             formData.append("description", description);
             formData.append("domain", domain);
             formData.append("budget", budget);
+            formData.append("deadline", deadline);
             formData.append("submittedBy", localStorage.getItem("email"));
             
             if (fileInput.files[0]) formData.append("attachment", fileInput.files[0]);
@@ -140,7 +162,6 @@
                 if (result.success) {
                     window.location.href = "/dashboard.html";
                 } else {
-                    // This will show exactly WHY the upload failed!
                     alert("Upload Failed: " + result.error); 
                 }
             } catch (error) {
