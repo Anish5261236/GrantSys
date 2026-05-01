@@ -7,15 +7,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- EARLY THEME INITIALIZATION: Prevents the screen from flashing the wrong colors when the page first loads -->
     <script>
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
 
     <style>
-        /* CSS VARIABLES (LIGHT MODE DEFAULT): These act as a central color palette. 
-           Changing a variable here updates the color everywhere it's used. */
         :root {
             --primary: #6366f1; --primary-hover: #4f46e5; --primary-glow: rgba(99, 102, 241, 0.4);
             --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -26,8 +23,6 @@
             --skeleton-base: #e2e8f0; --skeleton-shine: #f8fafc;
         }
 
-        /* DARK MODE VARIABLES: When the 'data-theme' attribute is set to 'dark', 
-           these colors override the default light mode ones above. */
         [data-theme="dark"] {
             --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             --glass-bg: rgba(30, 41, 59, 0.7); --glass-border: rgba(255, 255, 255, 0.1);
@@ -36,19 +31,9 @@
             --skeleton-base: #334155; --skeleton-shine: #475569;
         }
 
-        /* GLOBAL RESET: Removes default browser margins so our design looks consistent */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        
-        /* BODY STYLING: Sets the main background and enables smooth color transitions when toggling themes */
         body { background: var(--bg-gradient); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: background 0.5s ease, color 0.5s ease; }
 
-        /* NOTIFICATION SYSTEM: Styles for the pop-up alerts in the top right corner */
-        #notification-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; max-width: calc(100% - 48px); }
-        .toast { background: var(--card-bg); color: var(--text-main); padding: 16px 24px; border-radius: 16px; box-shadow: var(--glass-shadow); border: 1px solid var(--glass-border); border-left: 6px solid var(--primary); display: flex; align-items: center; gap: 14px; animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; transition: opacity 0.4s ease, transform 0.4s ease; font-weight: 500; font-size: 14px;}
-        .toast-success { border-left-color: #10b981; } .toast-error { border-left-color: #ef4444; } .toast-warning { border-left-color: #f59e0b; } .toast-info { border-left-color: #3b82f6; }
-        @keyframes slideIn { from { transform: translateX(120%) scale(0.9); opacity: 0; } to { transform: translateX(0) scale(1); opacity: 1; } }
-
-        /* SIDEBAR NAVIGATION: Uses backdrop-filter for the "glassmorphism" blurry effect */
         nav { width: 280px; background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; padding: 32px 24px; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 1000; position: relative;}
         nav.collapsed { width: 90px; padding: 32px 16px; }
         
@@ -67,18 +52,15 @@
         nav li span.menu-text { white-space: nowrap; transition: opacity 0.3s; }
         nav.collapsed li span.menu-text { opacity: 0; width: 0; display: none; }
         
-        /* TOOLTIPS: Shows text when hovering over sidebar icons in collapsed mode */
         nav li::after { content: attr(data-tooltip); position: absolute; left: calc(100% + 10px); background: var(--text-main); color: var(--card-bg); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; white-space: nowrap; opacity: 0; pointer-events: none; transform: translateX(-10px); transition: 0.3s; z-index: 100;}
         nav.collapsed li:hover::after { opacity: 1; transform: translateX(0); }
 
         .logout-btn { background: transparent; border: 1px solid transparent; color: #ef4444; padding: 14px; border-radius: 14px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; transition: all 0.2s; font-size: 14px; overflow: hidden; white-space: nowrap; margin-top: 8px;}
         .logout-btn:hover { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.2); }
         
-        /* THEME TOGGLE BUTTON STYLING */
         .theme-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-main); font-size: 20px; transition: 0.3s; box-shadow: var(--glass-shadow); }
         .theme-btn:hover { transform: rotate(15deg) scale(1.05); border-color: var(--primary); }
 
-        /* MAIN CONTENT AREA: Handles scrolling and section visibility */
         main { flex: 1; overflow-y: auto; padding: 48px 56px; scroll-behavior: smooth; position: relative; }
         .view-section { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; display: none; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -95,7 +77,6 @@
         .session-text { font-size: 11px; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;}
         .avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #a855f7); color: white; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: 700; box-shadow: 0 4px 12px var(--primary-glow); }
 
-        /* DATA CARDS (Top Metrics Grid) */
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 48px; }
         .reports-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
         .stat-card { background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 28px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative; overflow: hidden;}
@@ -103,7 +84,6 @@
         .stat-card span { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;}
         .stat-card h2 { font-size: 36px; font-weight: 800; color: var(--text-main); letter-spacing: -1px;}
 
-        /* TABLE & CONTROLS UI */
         .content-section { background: var(--glass-bg); backdrop-filter: blur(16px); border-radius: 24px; border: 1px solid var(--glass-border); padding: 32px; box-shadow: var(--glass-shadow); margin-bottom: 32px;}
         .controls-bar { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
         .control-input { padding: 12px 16px; border-radius: 12px; border: 1px solid var(--glass-border); color: var(--text-main); outline: none; font-size: 14px; font-weight: 500; background: var(--input-bg); transition: all 0.3s; }
@@ -124,7 +104,6 @@
         .btn-action { background: var(--card-bg); color: var(--text-main); border: 1px solid var(--glass-border); padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s;}
         .btn-action:hover { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); }
 
-        /* SKELETON LOADERS: Shows an animated placeholder while data is fetching */
         .skeleton { background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 50%, var(--skeleton-base) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; border-radius: 8px; }
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
         .sk-text { height: 20px; width: 60%; margin-bottom: 12px; }
@@ -135,7 +114,6 @@
         .page-btns button:hover:not(:disabled) { background: var(--primary); color: white; border-color: var(--primary); }
         .chart-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; }
 
-        /* USER MANAGEMENT STYLES */
         #add-user-form { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 16px; margin-bottom: 32px; padding: 24px; background: rgba(99, 102, 241, 0.04); border-radius: 16px; border: 1px solid var(--glass-border); align-items: end;}
         .btn-add { background: var(--primary); color: white; padding: 12px 24px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; font-size: 14px; height: 44px; transition: 0.2s;}
         .btn-add:hover { background: var(--primary-hover); transform: translateY(-2px);}
@@ -144,9 +122,7 @@
     </style>
 </head>
 <body>
-    <div id="notification-container"></div>
-
-    <!-- SIDEBAR HTML: Contains navigation links that are hidden/shown based on user role -->
+    <!-- SIDEBAR HTML -->
     <nav id="sidebar">
         <div class="nav-header">
             <div class="logo">GrantSys</div>
@@ -177,7 +153,7 @@
         </div>
     </nav>
 
-    <!-- MAIN WORKSPACE: Where content changes dynamically -->
+    <!-- MAIN WORKSPACE -->
     <main>
         <div class="header-container">
             <div class="header-left">
@@ -188,9 +164,7 @@
             </div>
             
             <div class="header-right">
-                <!-- THEME TOGGLE BUTTON -->
                 <button class="theme-btn" onclick="toggleTheme()" id="theme-toggle-btn" title="Toggle Dark/Light Mode">🌗</button>
-                
                 <div class="user-profile">
                     <div class="avatar" id="user-avatar">--</div>
                     <div class="profile-info">
@@ -201,10 +175,9 @@
             </div>
         </div>
 
-        <!-- DASHBOARD TAB: Contains statistics and the main data table -->
+        <!-- DASHBOARD TAB -->
         <div id="view-dashboard" class="view-section">
             <div class="stats-grid" id="stats-container">
-                <!-- SKELETON CARDS SHOWN WHILE LOADING -->
                 <div class="stat-card"><span class="skeleton sk-text"></span><h2 class="skeleton sk-title"></h2></div>
                 <div class="stat-card"><span class="skeleton sk-text"></span><h2 class="skeleton sk-title"></h2></div>
                 <div class="stat-card"><span class="skeleton sk-text"></span><h2 class="skeleton sk-title"></h2></div>
@@ -242,8 +215,6 @@
                             </tr>
                         </thead>
                         <tbody id="tableBody">
-                            <!-- Skeleton Rows while data is fetching -->
-                            <tr><td colspan="6"><div class="skeleton sk-text" style="width:100%"></div></td></tr>
                             <tr><td colspan="6"><div class="skeleton sk-text" style="width:100%"></div></td></tr>
                             <tr><td colspan="6"><div class="skeleton sk-text" style="width:100%"></div></td></tr>
                         </tbody>
@@ -264,8 +235,6 @@
         <div id="view-users" class="view-section">
             <div class="content-section">
                 <h3 style="color: var(--text-main); margin-bottom: 24px; font-size: 20px;">System Users Registry</h3>
-                
-                <!-- ADD USER FORM -->
                 <div id="add-user-form">
                     <div>
                         <label class="control-label" style="display:block; font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Email Address</label>
@@ -285,7 +254,6 @@
                     </div>
                     <button class="btn-add" onclick="addUser()">+ Add User</button>
                 </div>
-
                 <div class="table-responsive">
                     <table id="usersTable">
                         <thead><tr><th>Email Address</th><th>System Role</th><th>Actions</th></tr></thead>
@@ -295,9 +263,16 @@
             </div>
         </div>
 
-        <!-- REPORTS TAB (Admin Only): Holds Chart.js Canvases -->
+        <!-- REPORTS TAB (Admin Only) -->
         <div id="view-reports" class="view-section">
-            <div class="reports-grid" id="analytics-stats-container"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3 style="color: var(--text-main); font-size: 20px; margin: 0;">System Analytics & Reporting</h3>
+                <!-- EXPORT TO CSV BUTTON -->
+                <button class="btn-add" style="background: #10b981; margin: 0;" onclick="exportFundedReport()">📥 Generate Funded Projects Report (CSV)</button>
+            </div>
+            
+            <div class="stats-grid" id="analytics-stats-container"></div>
+            
             <div class="content-section" style="margin-bottom: 24px;">
                 <h3 style="margin-bottom: 24px; color: var(--text-main); font-size: 20px;">Approval Trends</h3>
                 <div style="position: relative; width: 100%; min-height: 200px;">
@@ -320,21 +295,16 @@
             </div>
         </div>
     </main>
+
 <script>
-    /* THEME TOGGLE LOGIC: Switches the data attribute and saves preference in browser storage */
     function toggleTheme() {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('theme', newTheme);
-        
-        // Re-render charts so their grid lines match the new theme background
-        if (document.getElementById('view-reports').style.display === 'block') {
-            generateReports(); 
-        }
+        if (document.getElementById('view-reports').style.display === 'block') { generateReports(); }
     }
 
-    /* UI TOGGLES: Collapses or expands the sidebar */
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
         const btn = document.querySelector('.collapse-btn');
@@ -342,39 +312,25 @@
         btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
     }
 
-    /* AUTHENTICATION CHECK: Protects the route and verifies role */
     const role = localStorage.getItem("role");
     const userEmail = localStorage.getItem("email");
-    
-    if(!role) {
-        console.log("No role found, redirecting to login.");
-        window.location.href = "/";
-    }
-    
+    if(!role) { window.location.href = "/"; }
     document.getElementById("user-role-label").innerText = `Authenticated as ${role}`;
 
-    /* DYNAMIC PROFILE: Greets the user based on time of day and formats their name */
     function initializeUserProfile() {
         const hour = new Date().getHours();
         let greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
         let displayName = userEmail ? userEmail.split('@')[0] : "User";
-        
         document.getElementById("dynamic-greeting").innerText = `${greeting}, ${displayName} 👋`;
         document.getElementById("user-avatar").innerText = displayName.charAt(0).toUpperCase();
-
-        // Live clock for session tracker
         setInterval(() => {
             document.getElementById("session-clock").innerText = `Session Active • ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
         }, 1000); 
     }
     initializeUserProfile();
 
-    /* ROLE-BASED ACCESS CONTROL (RBAC): Hides/Shows menu items depending on privileges */
     const menuIds = ["menu-submit", "menu-proposals", "menu-reviews", "menu-users", "nav-dash", "menu-reports"];
-    menuIds.forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.style.display = "none";
-    });
+    menuIds.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = "none"; });
 
     if (role === "Faculty") {
         document.getElementById("menu-submit").style.display = "flex";
@@ -389,17 +345,8 @@
         document.getElementById("menu-reports").style.display = "flex"; 
     }
 
-    /* TAB NAVIGATION: Handles switching between dashboard, users, and reports views */
-    function openDashboard() { 
-        switchTab('dashboard'); 
-        document.getElementById("statusFilter").value = "All"; 
-        applyFilters(); 
-    }
-    function openReviewQueue() { 
-        switchTab('dashboard'); 
-        document.getElementById("statusFilter").value = "Pending"; 
-        applyFilters(); 
-    }
+    function openDashboard() { switchTab('dashboard'); document.getElementById("statusFilter").value = "All"; applyFilters(); }
+    function openReviewQueue() { switchTab('dashboard'); document.getElementById("statusFilter").value = "Pending"; applyFilters(); }
 
     function switchTab(tab) {
         document.querySelectorAll('.view-section').forEach(el => el.style.display = 'none');
@@ -408,63 +355,41 @@
         
         document.querySelectorAll('nav li').forEach(li => li.classList.remove('active'));
         
-        if(tab === 'users') { 
-            document.getElementById('menu-users').classList.add('active'); 
-            loadUsers(); 
-        } else if(tab === 'reports') { 
-            document.getElementById('menu-reports').classList.add('active'); 
-            generateReports(); 
-        } else if(tab === 'dashboard') {
-            document.getElementById('nav-dash').classList.add('active');
+        if(tab === 'users') { document.getElementById('menu-users').classList.add('active'); loadUsers(); } 
+        else if(tab === 'reports') { document.getElementById('menu-reports').classList.add('active'); generateReports(); } 
+        else if(tab === 'dashboard') {
+            if (role === 'Faculty') { const el = document.getElementById('menu-proposals'); if (el) el.classList.add('active'); } 
+            else { const el = document.getElementById('nav-dash'); if (el) el.classList.add('active'); }
         }
     }
 
-    // State Variables for Pagination & Data
     let allProposals = [];
     let currentPage = 1; 
     const itemsPerPage = 10;
     let barChart, pieChart, lineChart;
 
-    /* FETCH PROPOSALS: Retrieves data from API. */
     async function loadProposals() {
-        console.log("Attempting to fetch proposals...");
         try {
             const res = await fetch("/proposals");
-            if (!res.ok) {
-                throw new Error(`HTTP error! status: ${res.status}`);
-            }
             let data = await res.json();
-            console.log("Proposals successfully fetched:", data);
             
             if (data.length === 0) {
-                console.warn("API works, but database has 0 proposals.");
-                const tBody = document.getElementById("tableBody");
-                if (tBody) tBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 48px; color: var(--text-muted);'>No proposals found. Database is empty.</td></tr>";
-                updateStatCards(data); // Will show 0 for all stats
+                document.getElementById("tableBody").innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 48px; color: var(--text-muted);'>No proposals found. Database is empty.</td></tr>";
+                updateStatCards(data);
                 return; 
             }
-            
-            if (role === "Faculty") {
-                console.log(`Filtering proposals for Faculty user: ${userEmail}`);
-                data = data.filter(p => p.submittedBy === userEmail);
-                console.log("Filtered data:", data);
-            }
-            
+            if (role === "Faculty") data = data.filter(p => p.submittedBy === userEmail);
             allProposals = data; 
             updateStatCards(allProposals);
             applyFilters(); 
         } catch (err) {
-            console.error("Critical API error, ensure backend is running and connected.", err);
-            const tBody = document.getElementById("tableBody");
-            if (tBody) tBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 48px; color: #ef4444;'>Failed to connect to the server. Please ensure the backend is running.</td></tr>";
+            document.getElementById("tableBody").innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 48px; color: #ef4444;'>Failed to connect to the server. Please ensure the backend is running.</td></tr>";
         }
     }
 
-    /* UPDATES TOP METRICS: Calculates Approved/Rejected/Pending totals */
     function updateStatCards(data) {
         const container = document.getElementById("stats-container");
         if (!container) return;
-        
         const total = data.length;
         const app = data.filter(p => p.status === 'Approved').length;
         const rej = data.filter(p => p.status === 'Rejected').length;
@@ -478,13 +403,11 @@
         `;
     }
 
-    /* FILTER ENGINE: Handles the search bar, status dropdown, and sorting */
     function applyFilters() {
         let filtered = [...allProposals];
         const searchBox = document.getElementById("searchBox");
         const statusFilter = document.getElementById("statusFilter");
         const sortFilter = document.getElementById("sortFilter");
-        
         if(!searchBox || !statusFilter || !sortFilter) return;
 
         const search = searchBox.value.toLowerCase();
@@ -497,18 +420,16 @@
         if (sort === "latest") filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         if (sort === "oldest") filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         if (sort === "budgetHigh") filtered.sort((a, b) => (b.budget || 0) - (a.budget || 0));
-        if (sort === "deadline") filtered.sort((a, b) => new Date(a.deadline) - new Date(b.deadline)); // Sort by earliest deadline
+        if (sort === "deadline") filtered.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
 
         renderTable(filtered);
     }
 
-    /* RENDER TABLE: Populates the HTML table with filtered data */
     function renderTable(data) {
         const tBody = document.getElementById("tableBody");
         const pageInfo = document.getElementById("page-info");
         const btnPrev = document.getElementById("btn-prev");
         const btnNext = document.getElementById("btn-next");
-        
         if(!tBody || !pageInfo || !btnPrev || !btnNext) return;
 
         tBody.innerHTML = "";
@@ -516,8 +437,7 @@
         if(data.length === 0) {
             tBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 48px; color: var(--text-muted);'>No matching proposals found for current filters.</td></tr>";
             pageInfo.innerText = "Showing 0 of 0";
-            btnPrev.disabled = true;
-            btnNext.disabled = true;
+            btnPrev.disabled = true; btnNext.disabled = true;
             return;
         }
         
@@ -546,20 +466,13 @@
 
     function changePage(dir) { currentPage += dir; applyFilters(); }
 
-    // --- USER MANAGEMENT FUNCTIONS (Admin Only) ---
-
-    /* FETCH USERS: Populates the Manage Users table for Admins */
     async function loadUsers() {
         const tbody = document.getElementById("usersBody");
         if(!tbody) return;
-        
-        // FIXED QUOTATION MARKS HERE
         tbody.innerHTML = `<tr><td colspan='3'><div class='skeleton sk-text' style='width:100%'></div></td></tr>`;
-
         try {
             const res = await fetch("/users");
             const users = await res.json();
-            
             tbody.innerHTML = "";
             users.forEach(u => {
                 const roleClass = `role-${u.role}`;
@@ -569,66 +482,64 @@
                     <td><button class="btn-delete" onclick="deleteUser('${u._id}')">Delete</button></td>
                 </tr>`;
             });
-        } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="3" style='color:#ef4444; text-align:center;'>Failed to load users. Backend may be offline.</td></tr>`;
-        }
+        } catch (err) { tbody.innerHTML = `<tr><td colspan="3" style='color:#ef4444; text-align:center;'>Failed to load users.</td></tr>`; }
     }
 
-    /* ADD NEW USER */
     async function addUser() {
-        const emailInput = document.getElementById("new-user-email");
-        const passwordInput = document.getElementById("new-user-password");
-        const roleInput = document.getElementById("new-user-role");
-        
-        if(!emailInput || !passwordInput || !roleInput) return;
-
-        const email = emailInput.value;
-        const password = passwordInput.value;
-        const role = roleInput.value;
-
+        const email = document.getElementById("new-user-email").value;
+        const password = document.getElementById("new-user-password").value;
+        const role = document.getElementById("new-user-role").value;
         if (!email || !password) return alert("Please fill in Email and Password.");
-
         try {
-            const res = await fetch("/users", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password, role })
-            });
+            const res = await fetch("/users", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password, role }) });
             const data = await res.json();
-            if (data.success) {
-                alert("User added successfully.");
-                emailInput.value = "";
-                passwordInput.value = "";
-                loadUsers(); // Refresh the table
-            } else {
-                alert("Failed to add user: " + data.error);
-            }
-        } catch (err) {
-            console.error("Error adding user:", err);
-        }
+            if (data.success) { alert("User added."); document.getElementById("new-user-email").value = ""; document.getElementById("new-user-password").value = ""; loadUsers(); } 
+            else { alert("Failed to add user: " + data.error); }
+        } catch (err) { console.error(err); }
     }
 
-    /* DELETE USER */
     async function deleteUser(userId) {
         if (!confirm("Are you sure you want to delete this user?")) return;
-
         try {
             const res = await fetch(`/users/${userId}`, { method: "DELETE" });
             const data = await res.json();
-            if (data.success) {
-                alert("User deleted successfully.");
-                loadUsers(); // Refresh the table
-            } else {
-                alert("Failed to delete user: " + data.error);
-            }
-        } catch (err) {
-            console.error("Error deleting user:", err);
-        }
+            if (data.success) { alert("User deleted."); loadUsers(); } else { alert("Failed: " + data.error); }
+        } catch (err) { console.error(err); }
     }
 
-    // --- ANALYTICS FUNCTIONS ---
+    /* === NEW: EXPORT FUNDED PROJECTS (CSV) === */
+    function exportFundedReport() {
+        // Find only approved projects
+        const fundedProposals = allProposals.filter(p => p.status === 'Approved');
+        
+        if (fundedProposals.length === 0) {
+            return alert("There are no funded (Approved) projects to generate a report for at this time.");
+        }
 
-    /* ANIMATION UTILITY: Animates numbers counting up */
+        // Initialize CSV file content with headers
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Project Title,Domain,Budget ($),Submitted By,Deadline,Date Approved\n";
+
+        // Loop through data and append rows
+        fundedProposals.forEach(p => {
+            // Remove commas from title to prevent CSV column breaking
+            const safeTitle = p.title.replace(/,/g, " "); 
+            const deadlineStr = p.deadline ? new Date(p.deadline).toLocaleDateString() : 'N/A';
+            const approvedDate = p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : 'N/A';
+            
+            csvContent += `${safeTitle},${p.domain},${p.budget},${p.submittedBy},${deadlineStr},${approvedDate}\n`;
+        });
+
+        // Trigger the browser download
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Funded_Projects_Report_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link); // Clean up
+    }
+
     function animateValue(obj, start, end, duration) {
         let startTimestamp = null;
         const step = (timestamp) => {
@@ -640,15 +551,17 @@
         window.requestAnimationFrame(step);
     }
 
-    /* CHART GENERATOR: Creates all three visualizations using Chart.js. */
     function generateReports() {
         const analyticsContainer = document.getElementById("analytics-stats-container");
         if (!analyticsContainer || !allProposals || allProposals.length === 0) return;
         
-        // Calculate Top Analytics Stats
         const total = allProposals.length;
-        const approved = allProposals.filter(p => p.status === 'Approved').length;
-        const rate = total > 0 ? ((approved / total) * 100).toFixed(1) : 0;
+        const approvedProposals = allProposals.filter(p => p.status === 'Approved');
+        const approvedCount = approvedProposals.length;
+        const rate = total > 0 ? ((approvedCount / total) * 100).toFixed(1) : 0;
+        
+        // Calculate Total Disbursed Funds
+        const totalFunds = approvedProposals.reduce((sum, p) => sum + (Number(p.budget) || 0), 0);
         
         const domainCounts = {};
         allProposals.forEach(p => { if (p.domain) domainCounts[p.domain] = (domainCounts[p.domain] || 0) + 1; });
@@ -659,10 +572,10 @@
             <div class="stat-card"><span>Total Analyzed</span><h2 id="a-tot">0</h2></div>
             <div class="stat-card"><span>Approval Rate</span><h2 style="color: #10b981;">${rate}%</h2></div>
             <div class="stat-card"><span>Top Domain</span><h2 style="color: var(--primary); font-size: 22px;">${topDomain}</h2></div>
+            <div class="stat-card"><span>Total Funds Disbursed</span><h2 style="color: #8b5cf6;">$${totalFunds.toLocaleString()}</h2></div>
         `;
         animateValue(document.getElementById("a-tot"), 0, total, 1000);
 
-        // Map Data for Charts
         const monthlyData = new Array(12).fill(0);
         const approvedMonthly = new Array(12).fill(0);
         allProposals.forEach(p => {
@@ -671,54 +584,30 @@
             if(p.status === 'Approved') approvedMonthly[month]++;
         });
 
-        // Theme-Aware Chart Styling
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         const gridColor = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)";
         const textColor = isDark ? "#94a3b8" : "#64748b";
-        
-        Chart.defaults.color = textColor;
-        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = textColor; Chart.defaults.font.family = "'Inter', sans-serif";
 
-        // 1. Monthly Submissions Bar Chart
-        const barCtx = document.getElementById('monthlyBarChart');
-        if (barCtx) {
+        if (document.getElementById('monthlyBarChart')) {
             if (barChart) barChart.destroy();
-            barChart = new Chart(barCtx.getContext('2d'), {
-                type: 'bar',
-                data: { labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], datasets: [{ label: 'Proposals', data: monthlyData, backgroundColor: 'rgba(99, 102, 241, 0.6)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 8, hoverBackgroundColor: '#4f46e5' }] },
-                options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1500, easing: 'easeOutQuart' }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: gridColor } }, x: { grid: { color: gridColor } } } }
-            });
+            barChart = new Chart(document.getElementById('monthlyBarChart').getContext('2d'), { type: 'bar', data: { labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], datasets: [{ label: 'Proposals', data: monthlyData, backgroundColor: 'rgba(99, 102, 241, 0.6)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { color: gridColor } } } } });
         }
 
-        // 2. Approval Trends Line Chart
-        const lineCtx = document.getElementById('trendLineChart');
-        if (lineCtx) {
+        if (document.getElementById('trendLineChart')) {
             if (lineChart) lineChart.destroy();
-            lineChart = new Chart(lineCtx.getContext('2d'), {
-                type: 'line',
-                data: { labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], datasets: [{ label: 'Approved', data: approvedMonthly, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', borderWidth: 4, tension: 0.4, fill: true, pointBackgroundColor: '#ffffff', pointBorderColor: '#10b981', pointBorderWidth: 2 }] },
-                options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1500, easing: 'easeOutQuart' }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: gridColor } }, x: { grid: { color: gridColor } } } }
-            });
+            lineChart = new Chart(document.getElementById('trendLineChart').getContext('2d'), { type: 'line', data: { labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], datasets: [{ label: 'Approved', data: approvedMonthly, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', borderWidth: 4, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { color: gridColor } } } } });
         }
 
-        // 3. Domain Distribution Pie Chart
-        const pieCtx = document.getElementById('domainPieChart');
-        if (pieCtx) {
+        if (document.getElementById('domainPieChart')) {
             if (pieChart) pieChart.destroy();
-            pieChart = new Chart(pieCtx.getContext('2d'), {
-                type: 'doughnut',
-                data: { labels: Object.keys(domainCounts), datasets: [{ data: Object.values(domainCounts), backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'], borderWidth: 0, hoverOffset: 8 }] },
-                options: { responsive: true, maintainAspectRatio: false, animation: { animateScale: true, animateRotate: true, duration: 1500 }, cutout: '75%', plugins: { legend: { position: 'right' } } }
-            });
+            pieChart = new Chart(document.getElementById('domainPieChart').getContext('2d'), { type: 'doughnut', data: { labels: Object.keys(domainCounts), datasets: [{ data: Object.values(domainCounts), backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right' } } } });
         }
     }
 
-    function logout() { 
-        localStorage.clear(); 
-        window.location.href = "/"; 
-    }
+    function logout() { localStorage.clear(); window.location.href = "/"; }
     
-    // Initial data load on page ready
+    openDashboard(); 
     loadProposals();
 </script>
 </body>
