@@ -123,8 +123,19 @@
             
             if (fileInput.files[0]) formData.append("attachment", fileInput.files[0]);
             
-            await fetch("/proposals", { method: "POST", body: formData });
-            window.location.href = "/dashboard.html";
+            try {
+                const response = await fetch("/proposals", { method: "POST", body: formData });
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.location.href = "/dashboard.html";
+                } else {
+                    // This will now show you exactly WHY the upload failed!
+                    alert("Upload Failed: " + result.error); 
+                }
+            } catch (error) {
+                alert("A network error occurred. Is the server running?");
+            }
         }
     </script>
 </body>

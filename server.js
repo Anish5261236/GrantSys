@@ -26,22 +26,19 @@ const storage = multer.diskStorage({
     filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "_"))
 });
 
-// Add a file filter to securely allow only PDFs and PPTs
+// SAFER FILTER: Check the actual file extension instead of the MIME type
 const fileFilter = (req, file, cb) => {
-    const allowedMimeTypes = [
-        "application/pdf", 
-        "application/vnd.ms-powerpoint", 
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation" 
-    ];
+    // Get the extension and make it lowercase (e.g., '.PPTX' becomes '.pptx')
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowedExtensions = ['.pdf', '.ppt', '.pptx'];
 
-    if (allowedMimeTypes.includes(file.mimetype)) {
+    if (allowedExtensions.includes(ext)) {
         cb(null, true);
     } else {
-        cb(new Error("Invalid file type. Only PDF and PPT files are allowed."), false);
+        cb(new Error(`Invalid file type (${ext}). Only PDF, PPT, and PPTX are allowed.`), false);
     }
 };
 
-// Pass the filter and limits into the multer instance
 const upload = multer({ 
     storage: storage,
     fileFilter: fileFilter,
@@ -49,7 +46,7 @@ const upload = multer({
 });
 
 // -------------------- DATABASE CONNECTION --------------------
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/grantsys") // Fallback URI added for local testing
 .then(() => console.log("MongoDB Connected"))
 .catch(err => console.log("MongoDB Error:", err));
 
@@ -98,26 +95,34 @@ app.post("/login", async (req, res) => {
 });
 
 // -------------------- SUBMIT PROPOSAL --------------------
-app.post("/proposals", upload.single("attachment"), async (req, res) => {
-    try {
-        const data = req.body;
-        
-        if (req.file) {
-            data.attachment = `/uploads/${req.file.filename}`; 
+app.post("/proposals", (req, res) => {
+    // Run the upload function INSIDE the route to catch Multer errors properly
+    upload.single("attachment")(req, res, async (err) => {
+        if (err) {
+            // If the file is too large or the wrong extension, send the error to the frontend
+            return res.json({ success: false, error: err.message });
         }
 
-        const proposal = new Proposal(data);
-        proposal.history.push({
-            status: "Pending",
-            comment: "Initial Submission",
-            reviewedBy: data.submittedBy
-        });
+        try {
+            const data = req.body;
+            
+            if (req.file) {
+                data.attachment = `/uploads/${req.file.filename}`; 
+            }
 
-        await proposal.save();
-        res.json({ success: true });
-    } catch (err) {
-        res.json({ success: false, error: err.message });
-    }
+            const proposal = new Proposal(data);
+            proposal.history.push({
+                status: "Pending",
+                comment: "Initial Submission",
+                reviewedBy: data.submittedBy
+            });
+
+            await proposal.save();
+            res.json({ success: true });
+        } catch (dbErr) {
+            res.json({ success: false, error: dbErr.message });
+        }
+    });
 });
 
 // -------------------- GET ALL PROPOSALS --------------------
