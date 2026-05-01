@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <!-- EARLY THEME INITIALIZATION -->
     <script>
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
@@ -187,7 +188,7 @@
             <div class="content-section">
                 <h3 style="color: var(--text-main); font-size: 20px; font-weight: 700; margin-bottom: 24px;" id="table-title">Database Overview</h3>
                 <div class="controls-bar">
-                    <!-- FIXED: Added autocomplete="off" here to prevent the browser from filling in email addresses -->
+                    <!-- Ensure autocomplete is OFF so browser doesn't fill with email -->
                     <input type="text" id="searchBox" class="control-input search-box" placeholder="🔍 Search title or domain..." oninput="applyFilters()" autocomplete="off">
                     <select id="statusFilter" class="control-input" onchange="applyFilters()">
                         <option value="All">All Statuses</option>
@@ -243,7 +244,7 @@
                     </div>
                     <div>
                         <label class="control-label" style="display:block; font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Password</label>
-                        <input type="password" id="new-user-password" class="control-input" style="width:100%" placeholder="••••••••" autocomplete="off">
+                        <input type="password" id="new-user-password" class="control-input" style="width:100%" placeholder="••••••••" autocomplete="new-password">
                     </div>
                     <div>
                         <label class="control-label" style="display:block; font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">System Role</label>
@@ -346,8 +347,22 @@
         document.getElementById("menu-reports").style.display = "flex"; 
     }
 
-    function openDashboard() { switchTab('dashboard'); document.getElementById("statusFilter").value = "All"; applyFilters(); }
-    function openReviewQueue() { switchTab('dashboard'); document.getElementById("statusFilter").value = "Pending"; applyFilters(); }
+    function openDashboard() { 
+        switchTab('dashboard'); 
+        // Important: Ensure search box is clear when opening dashboard
+        const searchBox = document.getElementById("searchBox");
+        if (searchBox) searchBox.value = "";
+        document.getElementById("statusFilter").value = "All"; 
+        applyFilters(); 
+    }
+    
+    function openReviewQueue() { 
+        switchTab('dashboard'); 
+        const searchBox = document.getElementById("searchBox");
+        if (searchBox) searchBox.value = "";
+        document.getElementById("statusFilter").value = "Pending"; 
+        applyFilters(); 
+    }
 
     function switchTab(tab) {
         document.querySelectorAll('.view-section').forEach(el => el.style.display = 'none');
@@ -379,9 +394,16 @@
                 updateStatCards(data);
                 return; 
             }
-            if (role === "Faculty") data = data.filter(p => p.submittedBy === userEmail);
+            if (role === "Faculty") {
+                data = data.filter(p => p.submittedBy === userEmail);
+            }
             allProposals = data; 
             updateStatCards(allProposals);
+            
+            // Force the search box to be empty on load before applying filters
+            const searchBox = document.getElementById("searchBox");
+            if (searchBox) searchBox.value = "";
+            
             applyFilters(); 
         } catch (err) {
             document.getElementById("tableBody").innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 48px; color: #ef4444;'>Failed to connect to the server. Please ensure the backend is running.</td></tr>";
@@ -411,11 +433,17 @@
         const sortFilter = document.getElementById("sortFilter");
         if(!searchBox || !statusFilter || !sortFilter) return;
 
-        const search = searchBox.value.toLowerCase();
+        const search = searchBox.value.toLowerCase().trim();
         const status = statusFilter.value;
         const sort = sortFilter.value;
 
-        if (search) filtered = filtered.filter(p => p.title.toLowerCase().includes(search) || p.domain.toLowerCase().includes(search));
+        if (search) {
+            filtered = filtered.filter(p => 
+                (p.title && p.title.toLowerCase().includes(search)) || 
+                (p.domain && p.domain.toLowerCase().includes(search))
+            );
+        }
+        
         if (status !== "All") filtered = filtered.filter(p => p.status === status);
 
         if (sort === "latest") filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -608,6 +636,7 @@
 
     function logout() { localStorage.clear(); window.location.href = "/"; }
     
+    // Initial data load on page ready
     openDashboard(); 
     loadProposals();
 </script>
