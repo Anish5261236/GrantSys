@@ -25,7 +25,28 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "_"))
 });
-const upload = multer({ storage });
+
+// Add a file filter to securely allow only PDFs and PPTs
+const fileFilter = (req, file, cb) => {
+    const allowedMimeTypes = [
+        "application/pdf", 
+        "application/vnd.ms-powerpoint", 
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation" 
+    ];
+
+    if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error("Invalid file type. Only PDF and PPT files are allowed."), false);
+    }
+};
+
+// Pass the filter and limits into the multer instance
+const upload = multer({ 
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
 
 // -------------------- DATABASE CONNECTION --------------------
 mongoose.connect(process.env.MONGO_URI)

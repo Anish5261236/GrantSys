@@ -70,10 +70,10 @@
         <textarea id="description"></textarea>
 
         <!-- Hidden input connected to visual drag and drop zone -->
-        <label>Upload Supporting Documents (PDF)</label>
+        <label>Upload Supporting Documents (PDF, PPT, PPTX)</label>
         <div class="drop-zone" id="drop-zone" onclick="document.getElementById('attachment').click()">
             <p id="drop-text">Drag & Drop your file here</p>
-            <input type="file" id="attachment" accept=".pdf" hidden>
+            <input type="file" id="attachment" accept="application/pdf, .ppt, .pptx, application/vnd.ms-powerpoint, application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden>
         </div>
 
         <button class="btn-submit" onclick="submitProposal()">Initialize Secure Submission</button>
